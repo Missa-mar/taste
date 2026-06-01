@@ -1,0 +1,1776 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TRACE — Treatment Recommendation and Aqua Chain Engine</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --blue-50:#E8F1FB;--blue-100:#C3D8F5;--blue-200:#85B7EB;
+  --blue-400:#2D7DD2;--blue-600:#1A5FAD;--blue-800:#0D3E7A;--blue-900:#082B57;
+  --teal-50:#E1F5EE;--teal-100:#9FE1CB;--teal-200:#5DCAA5;
+  --teal-400:#1D9E75;--teal-600:#0F6E56;
+  --amber-50:#FAEEDA;--amber-400:#BA7517;
+  --gray-50:#F1EFE8;--gray-100:#D3D1C7;--gray-200:#B4B2A9;
+  --gray-400:#888780;--gray-600:#5F5E5A;--gray-800:#444441;--gray-900:#1a2535;
+  --red-50:#FCEBEB;--red-400:#E24B4A;--red-800:#791F1F;
+  --bg:#f0f5fb;--surface:#ffffff;--text:#0d1b2e;--text-muted:#4a6080;
+  --border:rgba(26,95,173,0.12);--accent:#1A5FAD;--accent-light:#E8F1FB;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:16px;line-height:1.7;overflow-x:hidden;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(240,245,251,0.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 2rem;height:64px;display:flex;align-items:center;justify-content:space-between;}
+.nav-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.4rem;color:var(--accent);letter-spacing:-0.02em;text-decoration:none;display:flex;align-items:center;gap:8px;}
+.nav-logo-sub{color:var(--gray-400);font-weight:400;font-size:0.78rem;border-left:1px solid var(--gray-200);padding-left:8px;line-height:1.3;}
+.nav-links{display:flex;gap:1.5rem;list-style:none;align-items:center;}
+.nav-links a{color:var(--text-muted);text-decoration:none;font-size:0.875rem;font-weight:500;transition:color 0.2s;}
+.nav-links a:hover{color:var(--accent);}
+.nav-cta{background:var(--accent)!important;color:#fff!important;padding:8px 18px;border-radius:100px;font-size:0.82rem!important;}
+.nav-cta:hover{background:var(--blue-800)!important;}
+.nav-user-btn{display:flex;align-items:center;gap:8px;background:var(--accent-light);border:1.5px solid var(--accent);color:var(--accent);padding:6px 14px;border-radius:100px;font-size:0.82rem;font-weight:600;cursor:pointer;transition:all 0.2s;}
+.nav-user-btn:hover{background:var(--accent);color:#fff;}
+
+/* AUTH MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(8,43,87,0.6);backdrop-filter:blur(6px);z-index:500;display:none;align-items:center;justify-content:center;}
+.modal-overlay.active{display:flex;}
+.modal-box{background:white;border-radius:24px;padding:2.5rem;width:100%;max-width:440px;box-shadow:0 30px 80px rgba(8,43,87,0.25);position:relative;}
+.modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--gray-400);padding:4px;}
+.modal-title{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;color:var(--text);margin-bottom:0.25rem;}
+.modal-sub{font-size:0.875rem;color:var(--text-muted);margin-bottom:1.75rem;}
+.modal-tabs{display:flex;gap:0;background:var(--bg);border-radius:10px;padding:4px;margin-bottom:1.5rem;}
+.modal-tab{flex:1;padding:8px;text-align:center;border-radius:8px;font-size:0.875rem;font-weight:600;cursor:pointer;color:var(--text-muted);transition:all 0.2s;border:none;background:none;}
+.modal-tab.active{background:white;color:var(--accent);box-shadow:0 2px 8px rgba(26,95,173,0.15);}
+.form-group{margin-bottom:1rem;}
+.form-label{display:block;font-size:0.8rem;font-weight:600;color:var(--text-muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.05em;}
+.form-input{width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid var(--gray-100);font-size:0.9rem;color:var(--text);background:var(--bg);transition:border-color 0.2s;font-family:'DM Sans',sans-serif;}
+.form-input:focus{outline:none;border-color:var(--accent);}
+.btn-primary{background:var(--accent);color:#fff;padding:13px 24px;border-radius:100px;font-weight:600;font-size:0.9rem;border:none;cursor:pointer;transition:all 0.2s;width:100%;font-family:'DM Sans',sans-serif;}
+.btn-primary:hover{background:var(--blue-800);}
+.auth-msg{margin-top:0.75rem;padding:10px 14px;border-radius:8px;font-size:0.85rem;display:none;}
+.auth-msg.error{background:var(--red-50);color:var(--red-800);border:1px solid rgba(226,75,74,0.3);}
+.auth-msg.success{background:var(--teal-50);color:var(--teal-600);border:1px solid rgba(29,158,117,0.3);}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;align-items:center;padding:120px 2rem 80px;position:relative;overflow:hidden;}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(45,125,210,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(45,125,210,0.05) 1px,transparent 1px);background-size:60px 60px;}
+.hero-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.2;}
+.hero-blob-1{width:600px;height:600px;background:var(--blue-200);top:-100px;right:-200px;}
+.hero-blob-2{width:400px;height:400px;background:var(--teal-200);bottom:-100px;left:-100px;}
+.hero-content{max-width:1100px;margin:0 auto;width:100%;position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:var(--blue-50);color:var(--blue-600);font-size:0.8rem;font-weight:500;padding:6px 14px;border-radius:100px;border:1px solid rgba(26,95,173,0.2);margin-bottom:1.5rem;}
+.hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--blue-400);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.5;transform:scale(1.3);}}
+.hero h1{font-family:'Syne',sans-serif;font-size:clamp(2.2rem,4.5vw,3.5rem);font-weight:800;line-height:1.1;letter-spacing:-0.03em;margin-bottom:1.5rem;}
+.hero h1 .accent{color:var(--accent);}
+.hero-sub{font-size:1.05rem;color:var(--text-muted);line-height:1.8;margin-bottom:2.5rem;font-weight:300;}
+.hero-actions{display:flex;gap:1rem;flex-wrap:wrap;}
+.btn-hero{background:var(--accent);color:#fff;padding:14px 28px;border-radius:100px;font-weight:500;font-size:0.95rem;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all 0.2s;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.btn-hero:hover{background:var(--blue-800);transform:translateY(-1px);}
+.btn-hero-sec{background:transparent;color:var(--accent);padding:14px 28px;border-radius:100px;font-weight:500;font-size:0.95rem;text-decoration:none;display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--accent);transition:all 0.2s;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.btn-hero-sec:hover{background:var(--accent-light);}
+.hero-visual{background:white;border-radius:20px;border:1px solid var(--border);overflow:hidden;box-shadow:0 20px 60px rgba(26,95,173,0.1);}
+.hero-card-header{background:var(--accent);padding:1rem 1.5rem;display:flex;align-items:center;gap:12px;}
+.hero-card-dots{display:flex;gap:6px;}
+.hero-card-dots span{width:10px;height:10px;border-radius:50%;}
+.dot-r{background:rgba(255,255,255,0.3);}.dot-y{background:rgba(255,255,255,0.5);}.dot-g{background:rgba(255,255,255,0.8);}
+.hero-card-title{color:rgba(255,255,255,0.9);font-size:0.8rem;font-weight:500;}
+.hero-card-body{padding:1.5rem;}
+.hero-param-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--gray-50);font-size:0.84rem;}
+.hero-param-row:last-of-type{border-bottom:none;}
+.p-name{color:var(--text-muted);}.p-val{font-weight:500;}
+.p-badge{font-size:0.72rem;font-weight:600;padding:2px 8px;border-radius:100px;}
+.b-ok{background:var(--blue-50);color:var(--blue-600);}.b-warn{background:var(--amber-50);color:var(--amber-400);}.b-err{background:var(--red-50);color:var(--red-400);}
+.hero-result{margin-top:1rem;background:var(--blue-50);border-radius:12px;padding:1rem;border:1px solid rgba(45,125,210,0.2);}
+.hero-result-label{font-size:0.72rem;color:var(--blue-600);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;}
+.chain-wrap{display:flex;flex-wrap:wrap;gap:4px;align-items:center;}
+.chain-step{background:white;border:1px solid rgba(26,95,173,0.2);padding:3px 10px;border-radius:100px;font-size:0.74rem;font-weight:500;color:var(--blue-800);}
+.chain-arrow{color:var(--blue-400);font-size:0.7rem;font-weight:700;}
+
+/* STATS */
+.stats-bar{background:var(--accent);padding:2rem;}
+.stats-grid{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:2rem;text-align:center;}
+.stat-num{font-family:'Syne',sans-serif;font-size:2.2rem;font-weight:800;color:#fff;line-height:1;margin-bottom:4px;}
+.stat-label{font-size:0.83rem;color:rgba(255,255,255,0.7);}
+
+/* SECTIONS */
+section{padding:5rem 2rem;}
+.section-inner{max-width:1100px;margin:0 auto;}
+.section-tag{font-size:0.78rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.75rem;}
+.section-title{font-family:'Syne',sans-serif;font-size:clamp(1.8rem,3vw,2.5rem);font-weight:700;line-height:1.2;letter-spacing:-0.02em;margin-bottom:1rem;}
+.section-sub{font-size:1rem;color:var(--text-muted);max-width:580px;line-height:1.8;font-weight:300;}
+
+/* FEATURES */
+#fonctionnalites{background:white;}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:3rem;}
+.feature-card{background:var(--bg);border-radius:16px;padding:1.75rem;border:1px solid var(--border);transition:all 0.2s;position:relative;overflow:hidden;}
+.feature-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent);transform:scaleX(0);transition:transform 0.3s;transform-origin:left;}
+.feature-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(26,95,173,0.12);}
+.feature-card:hover::before{transform:scaleX(1);}
+.feature-icon{width:48px;height:48px;background:var(--accent-light);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:1.25rem;font-size:1.4rem;}
+.feature-title{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:700;margin-bottom:0.6rem;}
+.feature-desc{font-size:0.88rem;color:var(--text-muted);line-height:1.7;}
+
+/* PARAMETRES */
+#parametres{background:var(--bg);}
+.params-layout{display:grid;grid-template-columns:1fr 1.4fr;gap:4rem;align-items:start;margin-top:3rem;}
+.params-list{display:flex;flex-direction:column;gap:0.4rem;}
+.param-cat{font-size:0.73rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.08em;padding:0.5rem 0;margin-top:0.5rem;}
+.param-item{display:flex;align-items:center;justify-content:space-between;padding:0.55rem 1rem;background:white;border-radius:8px;border:1px solid var(--border);font-size:0.875rem;transition:border-color 0.15s;}
+.param-item:hover{border-color:var(--accent);}
+.param-item-unit{font-size:0.73rem;color:var(--text-muted);background:var(--gray-50);padding:2px 8px;border-radius:100px;}
+.params-preview{background:white;border-radius:20px;border:1px solid var(--border);overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.05);}
+.preview-header{background:var(--gray-900);padding:1rem 1.5rem;display:flex;align-items:center;gap:8px;}
+.preview-title{color:var(--blue-200);font-size:0.82rem;}
+.preview-body{padding:1.5rem;}
+.preview-mono{background:var(--blue-900);border-radius:10px;padding:1rem 1.25rem;font-family:'DM Sans',monospace;font-size:0.8rem;color:var(--blue-100);line-height:1.8;}
+.pm-ok{color:#9FE1CB;}.pm-warn{color:#EF9F27;}.pm-chain{color:#9FE1CB;font-weight:600;}
+
+/* NORMES */
+#normes{background:white;}
+.norms-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;margin-top:3rem;}
+.norm-card{background:var(--bg);border-radius:16px;padding:1.75rem;border:1px solid var(--border);display:flex;gap:1.25rem;align-items:flex-start;}
+.norm-icon{width:44px;height:44px;flex-shrink:0;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;font-family:'Syne',sans-serif;}
+.ni-teal{background:var(--teal-50);color:var(--teal-600);}
+.ni-blue{background:var(--blue-50);color:var(--blue-600);}
+.norm-title{font-weight:600;font-size:0.95rem;margin-bottom:4px;}
+.norm-desc{font-size:0.85rem;color:var(--text-muted);line-height:1.6;}
+
+/* CAS REELS */
+#cas-reels{background:var(--bg);}
+.cases-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;margin-top:3rem;}
+.case-card{border-radius:14px;border:1px solid var(--border);overflow:hidden;background:white;transition:all 0.2s;}
+.case-card:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(26,95,173,0.12);}
+.case-header{padding:1rem 1.25rem;display:flex;align-items:center;gap:10px;}
+.case-header.ma{background:var(--blue-50);}.case-header.fr{background:var(--teal-50);}.case-header.af{background:var(--amber-50);}
+.case-location{font-weight:600;font-size:0.9rem;}
+.case-river{font-size:0.78rem;color:var(--text-muted);}
+.case-body{padding:0 1.25rem 1.25rem;}
+.case-stat{display:flex;justify-content:space-between;font-size:0.82rem;padding:5px 0;border-bottom:1px solid var(--gray-50);}
+.case-stat:last-of-type{border-bottom:none;}
+.cs-k{color:var(--text-muted);}.cs-v{font-weight:500;}
+.case-filiere{margin-top:0.75rem;background:var(--blue-50);border-radius:8px;padding:0.5rem 0.75rem;font-size:0.74rem;color:var(--blue-800);font-weight:500;}
+
+/* ANALYSE SECTION */
+#analyse{background:linear-gradient(135deg,var(--blue-900) 0%,var(--gray-900) 100%);}
+.analyse-inner{max-width:1100px;margin:0 auto;}
+.analyse-header{text-align:center;margin-bottom:3rem;}
+.analyse-header .section-title{color:white;}
+.analyse-header .section-sub{color:rgba(255,255,255,0.65);margin:0 auto;}
+.analyse-form{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:2.5rem;}
+.a-group-title{font-size:0.72rem;font-weight:700;color:var(--blue-200);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.75rem;margin-top:1.5rem;}
+.a-group-title:first-child{margin-top:0;}
+.a-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:0.5rem;}
+.a-grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin-bottom:0.5rem;}
+.a-fgroup{display:flex;flex-direction:column;}
+.a-label{font-size:0.78rem;color:rgba(255,255,255,0.6);margin-bottom:4px;font-weight:500;}
+.a-input{padding:10px 13px;border-radius:8px;border:1.5px solid rgba(255,255,255,0.15);font-size:0.88rem;color:var(--text);background:rgba(255,255,255,0.92);transition:border-color 0.2s;font-family:'DM Sans',sans-serif;width:100%;}
+.a-input:focus{outline:none;border-color:var(--blue-200);}
+.btn-analyser{width:100%;background:var(--accent);color:white;border:none;padding:16px;border-radius:100px;font-size:1rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background 0.2s;margin-top:1.5rem;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-analyser:hover{background:var(--blue-800);}
+
+/* RESULT */
+.result-wrapper{margin-top:2rem;background:white;border-radius:20px;border:1px solid var(--border);overflow:hidden;box-shadow:0 12px 48px rgba(26,95,173,0.2);}
+.result-header{background:var(--accent);padding:1.25rem 1.75rem;display:flex;align-items:center;gap:12px;}
+.result-header-title{color:white;font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;}
+.result-station{color:rgba(255,255,255,0.75);font-size:0.82rem;margin-left:auto;}
+.result-body{padding:2rem;}
+.filiere-label{font-size:0.73rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:1rem;display:flex;align-items:center;gap:6px;}
+.filiere-steps{display:flex;flex-wrap:wrap;gap:0;align-items:center;margin-bottom:1.5rem;}
+.filiere-step-block{display:flex;align-items:center;}
+.filiere-step-pill{background:var(--blue-50);border:1.5px solid var(--accent);color:var(--accent);padding:8px 16px;border-radius:100px;font-size:0.82rem;font-weight:600;white-space:nowrap;}
+.filiere-arrow{color:var(--blue-400);font-size:1.1rem;margin:0 4px;font-weight:700;}
+.reco-section-title{font-size:0.73rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:1rem;margin-top:1.5rem;}
+.reco-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:0.75rem;}
+.reco-card{border-radius:12px;padding:1rem 1.25rem;display:flex;gap:10px;align-items:flex-start;border:1px solid;}
+.reco-card.ok{background:#f0faf6;border-color:rgba(29,158,117,0.25);}
+.reco-card.warn{background:#fffbf0;border-color:rgba(239,159,39,0.3);}
+.reco-card.err{background:#fff0f0;border-color:rgba(226,75,74,0.25);}
+.reco-card.info{background:var(--blue-50);border-color:rgba(26,95,173,0.2);}
+.reco-icon{font-size:1rem;flex-shrink:0;margin-top:2px;}
+.reco-text{font-size:0.85rem;line-height:1.55;color:var(--text);}
+.reco-text strong{display:block;font-weight:600;margin-bottom:2px;}
+.r-divider{height:1px;background:var(--border);margin:1.5rem 0;}
+.score-row{display:flex;gap:1rem;flex-wrap:wrap;margin-top:1.5rem;}
+.score-card{flex:1;min-width:150px;background:var(--blue-50);border:1px solid rgba(26,95,173,0.15);border-radius:12px;padding:1rem;text-align:center;}
+.score-val{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;color:var(--accent);line-height:1;}
+.score-lbl{font-size:0.76rem;color:var(--text-muted);margin-top:4px;}
+.nt-banner{background:var(--red-50);border:2px solid rgba(226,75,74,0.4);border-radius:14px;padding:1.5rem;text-align:center;margin-bottom:1.5rem;}
+.nt-banner-title{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;color:var(--red-800);margin-bottom:0.5rem;}
+.nt-banner-text{font-size:0.9rem;color:var(--red-800);}
+
+/* HISTORY */
+#historique{background:white;}
+.history-gate{text-align:center;padding:3rem;background:var(--blue-50);border-radius:20px;border:1px solid rgba(26,95,173,0.15);}
+.history-gate p{color:var(--text-muted);margin-bottom:1.5rem;}
+.history-list{display:flex;flex-direction:column;gap:1rem;margin-top:2rem;}
+.history-card{background:var(--bg);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:all 0.2s;}
+.history-card:hover{border-color:var(--accent);box-shadow:0 4px 20px rgba(26,95,173,0.1);}
+.history-card-header{background:var(--accent);padding:0.75rem 1.25rem;display:flex;align-items:center;justify-content:space-between;}
+.history-station{font-family:'Syne',sans-serif;font-weight:700;color:white;font-size:0.95rem;}
+.history-date{font-size:0.78rem;color:rgba(255,255,255,0.7);}
+.history-card-body{padding:1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;}
+.history-filiere{font-size:0.82rem;color:var(--text-muted);flex:1;}
+.history-filiere span{background:var(--blue-50);color:var(--blue-600);padding:2px 8px;border-radius:100px;font-size:0.75rem;margin-right:4px;display:inline-block;margin-bottom:3px;}
+.history-actions{display:flex;gap:0.5rem;}
+.btn-view-hist{background:var(--accent);color:white;border:none;padding:7px 16px;border-radius:100px;font-size:0.8rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background 0.2s;}
+.btn-view-hist:hover{background:var(--blue-800);}
+.btn-del-hist{background:var(--red-50);color:var(--red-400);border:1px solid rgba(226,75,74,0.3);padding:7px 16px;border-radius:100px;font-size:0.8rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
+.btn-del-hist:hover{background:var(--red-400);color:white;}
+.empty-hist{text-align:center;padding:3rem;color:var(--text-muted);}
+.empty-hist-icon{font-size:3rem;margin-bottom:1rem;}
+
+/* CONTACT */
+#contact{background:var(--bg);}
+.contact-layout{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:start;}
+.contact-form{background:white;border-radius:20px;padding:2rem;border:1px solid var(--border);}
+.contact-submit{width:100%;background:var(--accent);color:white;border:none;cursor:pointer;padding:14px;border-radius:100px;font-size:1rem;font-weight:600;font-family:'DM Sans',sans-serif;transition:background 0.2s;}
+.contact-submit:hover{background:var(--blue-800);}
+.contact-info-title{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:700;margin-bottom:1rem;}
+.contact-info-text{color:var(--text-muted);font-size:0.95rem;line-height:1.8;margin-bottom:2rem;}
+.contact-detail{display:flex;align-items:center;gap:12px;font-size:0.9rem;color:var(--text-muted);margin-bottom:1rem;}
+.contact-detail-icon{width:36px;height:36px;background:var(--accent-light);border-radius:8px;display:flex;align-items:center;justify-content:center;}
+
+/* A PROPOS */
+#apropos{background:white;}
+.apropos-layout{display:grid;grid-template-columns:1fr 1fr;gap:4rem;margin-top:2rem;}
+.apropos-card{background:var(--bg);border-radius:16px;padding:1.75rem;border:1px solid var(--border);margin-bottom:1.25rem;}
+.apropos-card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.05rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:8px;}
+.apropos-card-text{font-size:0.9rem;color:var(--text-muted);line-height:1.75;}
+.tech-tags{display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.75rem;}
+.tech-tag{background:var(--blue-50);color:var(--blue-600);border:1px solid rgba(26,95,173,0.2);padding:4px 12px;border-radius:100px;font-size:0.78rem;font-weight:500;}
+
+/* FOOTER */
+footer{background:var(--gray-900);color:rgba(255,255,255,0.6);padding:2rem;text-align:center;font-size:0.85rem;}
+footer strong{color:rgba(255,255,255,0.9);}
+.footer-refs{display:flex;gap:2rem;justify-content:center;margin-top:0.75rem;flex-wrap:wrap;font-size:0.78rem;color:rgba(255,255,255,0.4);}
+
+/* CHAT */
+#ai-chat-btn{position:fixed;bottom:28px;right:28px;z-index:999;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,var(--blue-400),var(--accent));border:none;cursor:pointer;box-shadow:0 6px 24px rgba(26,95,173,0.45);display:flex;align-items:center;justify-content:center;font-size:1.4rem;transition:transform 0.2s,box-shadow 0.2s;}
+#ai-chat-btn:hover{transform:scale(1.1);}
+#ai-chat-panel{position:fixed;bottom:100px;right:28px;z-index:998;width:380px;max-height:520px;background:white;border-radius:20px;border:1px solid var(--border);box-shadow:0 20px 60px rgba(26,95,173,0.2);display:none;flex-direction:column;overflow:hidden;}
+.chat-panel-header{background:linear-gradient(135deg,var(--blue-400),var(--accent));padding:1rem 1.25rem;display:flex;align-items:center;gap:10px;}
+.chat-panel-title{color:white;font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;flex:1;}
+.chat-panel-sub{color:rgba(255,255,255,0.75);font-size:0.72rem;}
+.chat-panel-close{color:rgba(255,255,255,0.7);background:none;border:none;cursor:pointer;font-size:1.1rem;padding:4px;border-radius:6px;}
+.chat-panel-close:hover{background:rgba(255,255,255,0.2);color:white;}
+.chat-messages{flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:0.75rem;min-height:220px;max-height:320px;}
+.chat-msg{max-width:85%;padding:0.65rem 0.9rem;border-radius:14px;font-size:0.85rem;line-height:1.55;}
+.chat-msg.bot{background:var(--blue-50);color:var(--text);border-bottom-left-radius:4px;align-self:flex-start;border:1px solid rgba(26,95,173,0.12);}
+.chat-msg.user{background:var(--accent);color:white;border-bottom-right-radius:4px;align-self:flex-end;}
+.chat-input-row{padding:0.75rem 1rem;border-top:1px solid var(--border);display:flex;gap:8px;}
+.chat-input{flex:1;border:1.5px solid var(--gray-100);border-radius:100px;padding:8px 14px;font-size:0.85rem;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.2s;color:var(--text);background:var(--bg);}
+.chat-input:focus{border-color:var(--accent);}
+.chat-send{background:var(--accent);color:white;border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;transition:background 0.2s;flex-shrink:0;}
+.chat-send:hover{background:var(--blue-800);}
+
+/* CHAIN STEPS */
+.chain-step-card{background:var(--accent);color:white;border-radius:14px;padding:14px 18px;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:110px;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,0.15);}
+.chain-step-card .step-icon{font-size:1.3rem;}
+.chain-step-card .step-name{font-family:'Syne',sans-serif;font-size:0.78rem;font-weight:700;line-height:1.2;}
+.chain-step-card .step-src{font-size:0.62rem;opacity:0.75;line-height:1.3;}
+
+
+.hist-modal-overlay{position:fixed;inset:0;background:rgba(8,43,87,0.7);backdrop-filter:blur(6px);z-index:600;display:none;align-items:flex-start;justify-content:center;padding:80px 1rem 1rem;overflow-y:auto;}
+.hist-modal-overlay.active{display:flex;}
+.hist-modal-box{background:white;border-radius:24px;padding:2rem;width:100%;max-width:900px;position:relative;margin-bottom:2rem;}
+.hist-modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--gray-400);}
+
+@media(max-width:900px){
+  .hero-content{grid-template-columns:1fr;}.hero-visual{display:none;}
+  .features-grid{grid-template-columns:1fr 1fr;}.stats-grid{grid-template-columns:2fr 2fr;gap:1.5rem;}
+  .norms-grid{grid-template-columns:1fr;}.cases-grid{grid-template-columns:1fr;}
+  .params-layout{grid-template-columns:1fr;}.contact-layout{grid-template-columns:1fr;}
+  .apropos-layout{grid-template-columns:1fr;}.nav-links{display:none;}
+  #ai-chat-panel{width:calc(100vw - 40px);right:20px;}
+  .a-grid-3{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:600px){
+  .features-grid{grid-template-columns:1fr;}.stats-grid{grid-template-columns:1fr 1fr;}
+  .a-grid-3{grid-template-columns:1fr;}.a-grid-2{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="auth-modal">
+  <div class="modal-box">
+    <button class="modal-close" id="auth-modal-close">✕</button>
+    <div class="modal-title">Bienvenue sur TRACE</div>
+    <div class="modal-sub">Créez votre compte pour accéder à l'historique de vos analyses.</div>
+    <div class="modal-tabs">
+      <button class="modal-tab active" id="tab-login" onclick="switchTab('login')">Se connecter</button>
+      <button class="modal-tab" id="tab-register" onclick="switchTab('register')">Créer un compte</button>
+    </div>
+    <!-- Login form -->
+    <div id="form-login">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" id="l-email" type="email" placeholder="vous@exemple.ma">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mot de passe</label>
+        <input class="form-input" id="l-pass" type="password" placeholder="••••••••">
+      </div>
+      <button class="btn-primary" onclick="doLogin()">Se connecter</button>
+      <div class="auth-msg" id="login-msg"></div>
+    </div>
+    <!-- Register form -->
+    <div id="form-register" style="display:none;">
+      <div class="form-group">
+        <label class="form-label">Nom complet</label>
+        <input class="form-input" id="r-name" type="text" placeholder="Votre nom">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" id="r-email" type="email" placeholder="vous@exemple.ma">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Organisme</label>
+        <input class="form-input" id="r-org" type="text" placeholder="ONEE, RADEEMA, bureau d'études…">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mot de passe</label>
+        <input class="form-input" id="r-pass" type="password" placeholder="Minimum 6 caractères">
+      </div>
+      <button class="btn-primary" onclick="doRegister()">Créer mon compte</button>
+      <div class="auth-msg" id="register-msg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY DETAIL MODAL -->
+<div class="hist-modal-overlay" id="hist-detail-modal">
+  <div class="hist-modal-box">
+    <button class="hist-modal-close" onclick="closeHistDetail()">✕</button>
+    <div id="hist-detail-content"></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    TRACE
+    <span class="nav-logo-sub">Treatment Recommendation<br>& Aqua Chain Engine</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#fonctionnalites">Fonctionnalités</a></li>
+    <li><a href="#cas-reels">Cas réels</a></li>
+    <li><a href="#historique">Historique</a></li>
+    <li><a href="#apropos">À propos</a></li>
+    <li><a href="#contact">Contact</a></li>
+    <li><a href="#analyse" class="nav-cta">Analyser</a></li>
+    <li><div id="nav-auth-area"></div></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="accueil">
+  <div class="hero-grid"></div>
+  <div class="hero-blob hero-blob-1"></div>
+  <div class="hero-blob hero-blob-2"></div>
+  <div class="hero-content">
+    <div>
+      <div class="hero-badge">
+        <div class="hero-badge-dot"></div>
+        Génération de chaîne de traitement — Version 7.0
+      </div>
+      <h1>Génération automatique de <span class="accent">chaînes de traitement des eaux de surface</span></h1>
+      <p class="hero-sub">TRACE analyse les paramètres physico-chimiques et bactériologiques de votre eau brute et recommande automatiquement la filière de traitement optimale, conforme à la norme marocaine NM 03.7.001.</p>
+      <div class="hero-actions">
+        <a href="#analyse" class="btn-hero">Analyser mon eau →</a>
+        <button class="btn-hero-sec" onclick="openAuthModal()">Créer un compte</button>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-card-header">
+        <div class="hero-card-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+        <div class="hero-card-title">TRACE — Analyse eau brute</div>
+      </div>
+      <div class="hero-card-body">
+        <div class="hero-param-row"><span class="p-name">pH</span><span class="p-val">7.85</span><span class="p-badge b-ok">Conforme</span></div>
+        <div class="hero-param-row"><span class="p-name">Turbidité</span><span class="p-val">134.5 NTU</span><span class="p-badge b-warn">Élevée</span></div>
+        <div class="hero-param-row"><span class="p-name">Ammonium NH₄</span><span class="p-val">1.65 mg/L</span><span class="p-badge b-err">Hors norme</span></div>
+        <div class="hero-param-row"><span class="p-name">Fer Fe</span><span class="p-val">0.69 mg/L</span><span class="p-badge b-warn">Hors norme</span></div>
+        <div class="hero-param-row"><span class="p-name">Manganèse Mn</span><span class="p-val">0.32 mg/L</span><span class="p-badge b-err">Hors norme</span></div>
+        <div class="hero-result">
+          <div class="hero-result-label">Filière recommandée par TRACE</div>
+          <div class="chain-wrap">
+            <span class="chain-step">Dégrillage</span><span class="chain-arrow">→</span>
+            <span class="chain-step">Pré-Cl₂</span><span class="chain-arrow">→</span>
+            <span class="chain-step">Coag/Floc</span><span class="chain-arrow">→</span>
+            <span class="chain-step">Décantation</span><span class="chain-arrow">→</span>
+            <span class="chain-step">Filtration</span><span class="chain-arrow">→</span>
+            <span class="chain-step">Chloration</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stats-grid">
+    <div><div class="stat-num">50+</div><div class="stat-label">Paramètres analysés</div></div>
+    <div><div class="stat-num">9</div><div class="stat-label">Étapes de diagnostic</div></div>
+    <div><div class="stat-num">1</div><div class="stat-label">Norme de référence</div></div>
+    <div><div class="stat-num">NM</div><div class="stat-label">NM 03.7.001 Maroc</div></div>
+  </div>
+</div>
+
+<!-- FONCTIONNALITES -->
+<section id="fonctionnalites">
+  <div class="section-inner">
+    <div class="section-tag">Fonctionnalités</div>
+    <h2 class="section-title">Tout ce dont vous avez besoin pour dimensionner votre filière</h2>
+    <p class="section-sub">De la saisie des paramètres bruts à la recommandation complète, TRACE automatise chaque étape du diagnostic.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🔬</div>
+        <div class="feature-title">Analyse physico-chimique complète</div>
+        <div class="feature-desc">50+ paramètres : pH, turbidité, matière organique, métaux (Fe/Mn/Al), nutriments, substances toxiques et bactériologie.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🧠</div>
+        <div class="feature-title">Moteur de règles expertes</div>
+        <div class="feature-desc">Logique fidèle à la norme NM 03.7.001 — chaque décision de traitement est déclenchée automatiquement selon les valeurs mesurées et les seuils normatifs.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚗️</div>
+        <div class="feature-title">Dosage automatique</div>
+        <div class="feature-desc">Calcul automatique des doses de réactifs selon les paramètres mesurés. Choix automatique du coagulant selon le pH.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📋</div>
+        <div class="feature-title">Rapport complet</div>
+        <div class="feature-desc">Non-traitabilité, hors-norme, recommandations par paramètre, filière ordonnée, scores de confiance et efficacité.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🗂️</div>
+        <div class="feature-title">Historique par station</div>
+        <div class="feature-desc">Chaque analyse est sauvegardée sous le nom de la station. Consultez et relancez vos analyses précédentes à tout moment.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🌍</div>
+        <div class="feature-title">Conformité normative</div>
+        <div class="feature-desc">Vérification systématique vis-à-vis de la norme marocaine NM 03.7.001 — valeurs maximales admissibles (VMA) et seuils de non-traitabilité catégorie A3.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PARAMETRES -->
+<section id="parametres">
+  <div class="section-inner">
+    <div class="section-tag">Paramètres pris en charge</div>
+    <h2 class="section-title">Une couverture analytique complète</h2>
+    <p class="section-sub">Saisissez les mesures disponibles — les paramètres manquants sont ignorés dans l'analyse.</p>
+    <div class="params-layout">
+      <div class="params-list">
+        <div class="param-cat">Physico-chimique de base</div>
+        <div class="param-item"><span>pH</span><span class="param-item-unit">--</span></div>
+        <div class="param-item"><span>Turbidité</span><span class="param-item-unit">NTU</span></div>
+        <div class="param-item"><span>DBO₅ / Matière organique</span><span class="param-item-unit">mg/L O₂</span></div>
+        <div class="param-item"><span>MES / Conductivité</span><span class="param-item-unit">mg/L | µS/cm</span></div>
+        <div class="param-item"><span>TAC / Dureté totale TH</span><span class="param-item-unit">°f</span></div>
+        <div class="param-cat">Nutriments & ions</div>
+        <div class="param-item"><span>NH₄, NO₂, NO₃</span><span class="param-item-unit">mg/L</span></div>
+        <div class="param-item"><span>Chlorures, Sulfates, Fluorures</span><span class="param-item-unit">mg/L</span></div>
+        <div class="param-cat">Métaux</div>
+        <div class="param-item"><span>Fe, Mn, Al, Zn, Cu</span><span class="param-item-unit">mg/L</span></div>
+        <div class="param-item"><span>As, Cd, Cr, Pb, Hg, Se, Ni, CN⁻</span><span class="param-item-unit">µg/L</span></div>
+        <div class="param-cat">Bactériologie</div>
+        <div class="param-item"><span>E. coli, Coliformes</span><span class="param-item-unit">UFC/100mL</span></div>
+        <div class="param-item"><span>Entérocoques, Clostridium</span><span class="param-item-unit">ufc/100mL</span></div>
+      </div>
+      <div class="params-preview">
+        <div class="preview-header">
+          <span style="color:#E24B4A;">●</span><span style="color:#EF9F27;">●</span><span style="color:#9FE1CB;">●</span>
+          <div class="preview-title">TRACE v6 — Aperçu résultat (cas OumErRbia)</div>
+        </div>
+        <div class="preview-body">
+          <div class="preview-mono">
+<span class="pm-warn">⚠ Hors norme : NH₄ (1.65 mg/L), Fe (0.69 mg/L), Mn (0.32 mg/L)</span><br>
+<span class="pm-ok">✓ Coagulant : Al₂(SO₄)₃ — pH 7.85 optimal (6.8–7.5)</span><br>
+<span class="pm-ok">✓ Pré-traitement : Pré-chloration (Cl₂)</span><br>
+<span class="pm-warn">⚠ Surdosage Cl₂ : 10 × 1.65 = 16.5 mg/L</span><br>
+<span class="pm-warn">⚠ Fe > 0.3 ET Mn > 0.5 → Recommandation : Oxydation KMnO₄</span>
+          </div>
+          <div style="margin-top:1rem;background:var(--blue-50);border:1px solid rgba(26,95,173,0.15);border-radius:10px;padding:0.9rem;">
+            <div style="font-size:0.72rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.6rem;">⛓ Chaîne de traitement</div>
+            <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;">
+              <span style="background:white;border:1.5px solid var(--accent);color:var(--accent);padding:4px 10px;border-radius:100px;font-size:0.74rem;font-weight:600;">Dégrillage</span>
+              <span style="color:var(--blue-400);font-weight:700;">→</span>
+              <span style="background:white;border:1.5px solid var(--accent);color:var(--accent);padding:4px 10px;border-radius:100px;font-size:0.74rem;font-weight:600;">Pré-Cl₂</span>
+              <span style="color:var(--blue-400);font-weight:700;">→</span>
+              <span style="background:white;border:1.5px solid var(--accent);color:var(--accent);padding:4px 10px;border-radius:100px;font-size:0.74rem;font-weight:600;">Aération</span>
+              <span style="color:var(--blue-400);font-weight:700;">→</span>
+              <span style="background:white;border:1.5px solid var(--accent);color:var(--accent);padding:4px 10px;border-radius:100px;font-size:0.74rem;font-weight:600;">Coag/Floc</span>
+              <span style="color:var(--blue-400);font-weight:700;">→</span>
+              <span style="background:white;border:1.5px solid var(--accent);color:var(--accent);padding:4px 10px;border-radius:100px;font-size:0.74rem;font-weight:600;">Décantation</span>
+              <span style="color:var(--blue-400);font-weight:700;">→</span>
+              <span style="background:white;border:1.5px solid var(--accent);color:var(--accent);padding:4px 10px;border-radius:100px;font-size:0.74rem;font-weight:600;">Filtration sable</span>
+              <span style="color:var(--blue-400);font-weight:700;">→</span>
+              <span style="background:white;border:1.5px solid var(--accent);color:var(--accent);padding:4px 10px;border-radius:100px;font-size:0.74rem;font-weight:600;">Chloration</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NORMES -->
+<section id="normes">
+  <div class="section-inner">
+    <div class="section-tag">Référence normative</div>
+    <h2 class="section-title">Conforme à la norme marocaine NM 03.7.001</h2>
+    <p class="section-sub">TRACE applique exclusivement la norme marocaine de qualité des eaux de surface destinées à la production d'eau potable.</p>
+    <div class="norms-grid" style="grid-template-columns:1fr;">
+      <div class="norm-card" style="max-width:700px;">
+        <div class="norm-icon ni-teal" style="width:56px;height:56px;font-size:0.85rem;">NM</div>
+        <div>
+          <div class="norm-title" style="font-size:1.1rem;">NM 03.7.001 — Norme Marocaine</div>
+          <div class="norm-desc" style="font-size:0.9rem;line-height:1.75;">
+            Norme marocaine de qualité des eaux de surface destinées à la consommation humaine, publiée par l'IMANOR. Définit les valeurs maximales admissibles (VMA) pour l'ensemble des paramètres physico-chimiques et bactériologiques, ainsi que les seuils de non-traitabilité de catégorie A3 pour les substances toxiques.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CAS REELS -->
+<section id="cas-reels">
+  <div class="section-inner">
+    <div class="section-tag">Cas réels de validation</div>
+    <h2 class="section-title">Des données terrain issues de publications scientifiques</h2>
+    <p class="section-sub">Les règles expertes de TRACE ont été validées sur des cas documentés issus de publications peer-reviewed (2015–2023).</p>
+    <div class="cases-grid">
+      <div class="case-card">
+        <div class="case-header ma"><div>🇲🇦</div><div><div class="case-location">Oum Er-Rbia</div><div class="case-river">Région Beni Mellal, Maroc</div></div></div>
+        <div class="case-body">
+          <div class="case-stat"><span class="cs-k">Turbidité</span><span class="cs-v">134.5 NTU</span></div>
+          <div class="case-stat"><span class="cs-k">Ammonium NH₄</span><span class="cs-v">1.65 mg/L</span></div>
+          <div class="case-stat"><span class="cs-k">Fer Fe / Mn</span><span class="cs-v">0.69 / 0.32 mg/L</span></div>
+          <div class="case-filiere">Pré-Cl₂ → KMnO₄ → Coag/Floc → Décantation → Filtration → Chloration</div>
+        </div>
+      </div>
+      <div class="case-card">
+        <div class="case-header ma"><div>🇲🇦</div><div><div class="case-location">Oued Sebou</div><div class="case-river">Gharb, Maroc</div></div></div>
+        <div class="case-body">
+          <div class="case-stat"><span class="cs-k">Nitrates NO₃</span><span class="cs-v">98.6 mg/L</span></div>
+          <div class="case-stat"><span class="cs-k">Ammonium NH₄</span><span class="cs-v">1.38 mg/L</span></div>
+          <div class="case-stat"><span class="cs-k">Conductivité</span><span class="cs-v">1 231 µS/cm</span></div>
+          <div class="case-filiere">Coag/Floc → Décantation → Filtration → Dénitrification → Chloration</div>
+        </div>
+      </div>
+      <div class="case-card">
+        <div class="case-header ma"><div>🇲🇦</div><div><div class="case-location">Oued Mchera</div><div class="case-river">Bassin Bouregreg, Maroc</div></div></div>
+        <div class="case-body">
+          <div class="case-stat"><span class="cs-k">Conductivité</span><span class="cs-v">4 611 µS/cm</span></div>
+          <div class="case-stat"><span class="cs-k">pH</span><span class="cs-v">8.19</span></div>
+          <div class="case-stat"><span class="cs-k">TDS élevé</span><span class="cs-v">Oui</span></div>
+          <div class="case-filiere">Coag/Floc → Décantation → Filtration → <strong>Nanofiltration</strong> → Chloration</div>
+        </div>
+      </div>
+      <div class="case-card">
+        <div class="case-header fr"><div>🇫🇷</div><div><div class="case-location">Garonne — Sérignac</div><div class="case-river">Lot-et-Garonne, France</div></div></div>
+        <div class="case-body">
+          <div class="case-stat"><span class="cs-k">Turbidité</span><span class="cs-v">452.5 NTU</span></div>
+          <div class="case-stat"><span class="cs-k">Chlorures</span><span class="cs-v">40 mg/L</span></div>
+          <div class="case-stat"><span class="cs-k">Sulfates</span><span class="cs-v">90 mg/L</span></div>
+          <div class="case-filiere">Coag/Floc → Décantation lamellaire → Filtration → Chloration</div>
+        </div>
+      </div>
+      <div class="case-card">
+        <div class="case-header af"><div>🇬🇭</div><div><div class="case-location">Lac Weija</div><div class="case-river">Usine Adam Clark, Ghana</div></div></div>
+        <div class="case-body">
+          <div class="case-stat"><span class="cs-k">Turbidité</span><span class="cs-v">25.1 NTU</span></div>
+          <div class="case-stat"><span class="cs-k">Couleur</span><span class="cs-v">136.5 mg Pt/L</span></div>
+          <div class="case-stat"><span class="cs-k">Conductivité</span><span class="cs-v">377.5 µS/cm</span></div>
+          <div class="case-filiere">Coag/Floc → Décantation → Filtration CAG → Chloration</div>
+        </div>
+      </div>
+      <div class="case-card">
+        <div class="case-header af"><div>🇿🇦</div><div><div class="case-location">4 WTPs — Afrique du Sud</div><div class="case-river">Vaalkop, Klipdrift…</div></div></div>
+        <div class="case-body">
+          <div class="case-stat"><span class="cs-k">Turbidité</span><span class="cs-v">877.8 NTU</span></div>
+          <div class="case-stat"><span class="cs-k">Fer Fe</span><span class="cs-v">2.5 mg/L</span></div>
+          <div class="case-stat"><span class="cs-k">Ammonium</span><span class="cs-v">2.5 mg/L</span></div>
+          <div class="case-filiere">Aération → Pré-Cl₂ → Coag/Floc → Décantation → Filtration → Chloration</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ANALYSE -->
+<section id="analyse">
+  <div class="analyse-inner">
+    <div class="analyse-header">
+      <div class="section-tag" style="color:var(--blue-200);">Analyse</div>
+      <h2 class="section-title">Analysez votre eau brute</h2>
+      <p class="section-sub">Renseignez les paramètres mesurés — les valeurs manquantes ne bloquent pas l'analyse.</p>
+    </div>
+    <div class="analyse-form">
+      <div class="a-group-title">Identification</div>
+      <div class="a-grid-2">
+        <div class="a-fgroup"><label class="a-label">Nom de la station *</label><input class="a-input" id="a-station" type="text" placeholder="Nom de votre station / site"></div>
+        <div class="a-fgroup"><label class="a-label">Lieu / Région</label><input class="a-input" id="a-lieu" type="text" placeholder="Ex : Oued Tensift, Chaouia..."></div>
+      </div>
+
+      <div class="a-group-title">Physico-chimique de base</div>
+      <div class="a-grid-3">
+        <div class="a-fgroup"><label class="a-label">pH</label><input class="a-input" id="a-ph" type="number" step="0.01" placeholder=""></div>
+        <div class="a-fgroup"><label class="a-label">Turbidité (NTU)</label><input class="a-input" id="a-turb" type="number" step="0.1" placeholder=""></div>
+        <div class="a-fgroup"><label class="a-label">Conductivité (µS/cm)</label><input class="a-input" id="a-cond" type="number" step="1" placeholder=""></div>
+        <div class="a-fgroup"><label class="a-label">MES (mg/L)</label><input class="a-input" id="a-mes" type="number" step="1" placeholder=""></div>
+        <div class="a-fgroup"><label class="a-label">Couleur (mg Pt/L)</label><input class="a-input" id="a-color" type="number" step="1" placeholder=""></div>
+        <div class="a-fgroup"><label class="a-label">Matière organique (mg/L O₂)</label><input class="a-input" id="a-mo" type="number" step="0.1" placeholder=""></div>
+        <div class="a-fgroup"><label class="a-label">DBO₅ (mg/L O₂)</label><input class="a-input" id="a-dbo" type="number" step="0.1" placeholder=""></div>
+        <div class="a-fgroup"><label class="a-label">TAC (°f)</label><input class="a-input" id="a-tac" type="number" step="0.1" placeholder=""></div>
+        <div class="a-fgroup"><label class="a-label">Dureté totale TH (°f)</label><input class="a-input" id="a-th" type="number" step="0.1" placeholder=""></div>
+      </div>
+
+      <div class="a-group-title">Nutriments & ions majeurs</div>
+      <div class="a-grid-3">
+        <div class="a-fgroup"><label class="a-label">Ammonium NH₄ (mg/L)</label><input class="a-input" id="a-nh4" type="number" step="0.01" placeholder=""></div>
+        <div class="a-fgroup"><label class="a-label">Nitrates NO₃ (mg/L)</label><input class="a-input" id="a-no3" type="number" step="0.1" placeholder=""></div>
+        <div class="a-fgroup"><label class="a-label">Nitrites NO₂ (mg/L)</label><input class="a-input" id="a-no2" type="number" step="0.01" placeholder=""></div>
+        <div class="a-fgroup"><label class="a-label">Fluorures F⁻ (mg/L)</label><input class="a-input" id="a-fluo" type="number" step="0.01" placeholder=""></div>
+        <div class="a-fgroup"><label class="a-label">Chlorures Cl⁻ (mg/L)</label><input class="a-input" id="a-cl" type="number" step="1" placeholder=""></div>
+        <div class="a-fgroup"><label class="a-label">Sulfates SO₄ (mg/L)</label><input class="a-input" id="a-so4" type="number" step="1" placeholder=""></div>
+      </div>
+
+      <div class="a-group-title">Métaux courants (mg/L)</div>
+      <div class="a-grid-3">
+        <div class="a-fgroup"><label class="a-label">Fer Fe total (mg/L)</label><input class="a-input" id="a-fe" type="number" step="0.01" placeholder=""></div>
+        <div class="a-fgroup"><label class="a-label">Manganèse Mn (mg/L)</label><input class="a-input" id="a-mn" type="number" step="0.001" placeholder=""></div>
+        <div class="a-fgroup"><label class="a-label">Aluminium Al (mg/L)</label><input class="a-input" id="a-al" type="number" step="0.01" placeholder=""></div>
+        <div class="a-fgroup"><label class="a-label">Zinc Zn (mg/L)</label><input class="a-input" id="a-zn" type="number" step="0.01" placeholder=""></div>
+        <div class="a-fgroup"><label class="a-label">Cuivre Cu (mg/L)</label><input class="a-input" id="a-cu" type="number" step="0.01" placeholder=""></div>
+        <div class="a-fgroup"><label class="a-label">Mercure Hg (µg/L)</label><input class="a-input" id="a-hg" type="number" step="0.01" placeholder=""></div>
+      </div>
+
+      <div class="a-group-title">Substances toxiques — seuils NT (µg/L)</div>
+      <div class="a-grid-3">
+        <div class="a-fgroup"><label class="a-label">Arsenic As (µg/L)</label><input class="a-input" id="a-as" type="number" step="0.1" placeholder=""></div>
+        <div class="a-fgroup"><label class="a-label">Cadmium Cd (µg/L)</label><input class="a-input" id="a-cd" type="number" step="0.01" placeholder=""></div>
+        <div class="a-fgroup"><label class="a-label">Chrome total Cr (µg/L)</label><input class="a-input" id="a-cr" type="number" step="0.1" placeholder=""></div>
+        <div class="a-fgroup"><label class="a-label">Plomb Pb (µg/L)</label><input class="a-input" id="a-pb" type="number" step="0.1" placeholder=""></div>
+        <div class="a-fgroup"><label class="a-label">Sélénium Se (µg/L)</label><input class="a-input" id="a-se" type="number" step="0.1" placeholder=""></div>
+        <div class="a-fgroup"><label class="a-label">Nickel Ni (µg/L)</label><input class="a-input" id="a-ni" type="number" step="0.1" placeholder=""></div>
+        <div class="a-fgroup"><label class="a-label">Cyanures CN⁻ (µg/L)</label><input class="a-input" id="a-cn" type="number" step="0.1" placeholder=""></div>
+        <div class="a-fgroup"><label class="a-label">Pesticides / subst. (µg/L)</label><input class="a-input" id="a-pest" type="number" step="0.001" placeholder=""></div>
+        <div class="a-fgroup"><label class="a-label">Pesticides total (µg/L)</label><input class="a-input" id="a-pestt" type="number" step="0.01" placeholder=""></div>
+      </div>
+
+      <div class="a-group-title">Bactériologie</div>
+      <div class="a-grid-3">
+        <div class="a-fgroup"><label class="a-label">E. coli / Colif. fécaux (UFC/100mL)</label><input class="a-input" id="a-ecoli" type="number" step="1" placeholder=""></div>
+        <div class="a-fgroup"><label class="a-label">Coliformes totaux (UFC/100mL)</label><input class="a-input" id="a-coli" type="number" step="1" placeholder=""></div>
+        <div class="a-fgroup"><label class="a-label">Entérocoques (UFC/100mL)</label><input class="a-input" id="a-entero" type="number" step="1" placeholder=""></div>
+        <div class="a-fgroup"><label class="a-label">Clostridium SR (ufc/100mL)</label><input class="a-input" id="a-clos" type="number" step="1" placeholder=""></div>
+      </div>
+
+      <button class="btn-analyser" id="btn-analyser">🔬 Lancer l'analyse TRACE</button>
+    </div>
+    <div id="analyse-result" style="display:none;"></div>
+  </div>
+</section>
+
+<!-- HISTORIQUE -->
+<section id="historique">
+  <div class="section-inner">
+    <div class="section-tag">Historique</div>
+    <h2 class="section-title">Mes analyses</h2>
+    <p class="section-sub">Retrouvez toutes vos analyses précédentes, classées par station.</p>
+    <div id="historique-content" style="margin-top:2rem;"></div>
+  </div>
+</section>
+
+<!-- À PROPOS -->
+<section id="apropos">
+  <div class="section-inner">
+    <div class="section-tag">À propos</div>
+    <h2 class="section-title">TRACE — Treatment Recommendation and Aqua Chain Engine</h2>
+    <p class="section-sub">Un outil académique et professionnel pour l'aide à la décision en ingénierie du traitement des eaux de surface.</p>
+    <div class="apropos-layout">
+      <div>
+        <div class="apropos-card">
+          <div class="apropos-card-title">🎯 Objectif du projet</div>
+          <div class="apropos-card-text">TRACE (Treatment Recommendation and Aqua Chain Engine) est un système d'aide à la décision destiné aux ingénieurs en traitement des eaux de surface. Il automatise le diagnostic et recommande une filière optimale conforme à la norme marocaine NM 03.7.001.</div>
+        </div>
+        <div class="apropos-card">
+          <div class="apropos-card-title">🧠 Approche méthodologique</div>
+          <div class="apropos-card-text">Le système combine un moteur de règles expertes avec une logique de décision multicritère. Chaque recommandation est tracée et justifiée : règle déclenchée, seuil normatif concerné, dosage calculé.</div>
+        </div>
+        <div class="apropos-card">
+          <div class="apropos-card-title">👩‍🔬 Auteure</div>
+          <div class="apropos-card-text">Développé dans un cadre académique en ingénierie de l'environnement et traitement des eaux.<br>Contact : <a href="mailto:houdachal88.18@gmail.com" style="color:var(--accent);font-weight:500;text-decoration:none;">houdachal88.18@gmail.com</a><br><a href="mailto:salouadehbi7@gmail.com" style="color:var(--accent);font-weight:500;text-decoration:none;">salouadehbi7@gmail.com</a></div>
+        </div>
+      </div>
+      <div>
+        <div class="apropos-card">
+          <div class="apropos-card-title">⚙️ Technologies</div>
+          <div class="apropos-card-text">Interface web HTML5/CSS3/JavaScript avec moteur de règles expertes intégré. Comptes utilisateurs et historique des analyses sauvegardés localement.</div>
+          <div class="tech-tags">
+            <span class="tech-tag">HTML5</span><span class="tech-tag">CSS3</span><span class="tech-tag">JavaScript ES6</span>
+            <span class="tech-tag">Règles expertes</span><span class="tech-tag">NM 03.7.001</span>
+          </div>
+        </div>
+        <div class="apropos-card">
+          <div class="apropos-card-title">📖 Référence normative</div>
+          <div class="apropos-card-text" style="font-size:0.82rem;line-height:1.7;">
+            • NM 03.7.001 / NM 03.7.011 — IMANOR, Maroc (référence principale)<br>
+            • Valeurs maximales admissibles (VMA) pour tous les paramètres<br>
+            • Seuils de non-traitabilité catégorie A3 pour substances toxiques
+          </div>
+        </div>
+        <div class="apropos-card">
+          <div class="apropos-card-title">⚠️ Avertissement</div>
+          <div class="apropos-card-text">TRACE est un outil d'aide à la décision à visée académique et préliminaire. Toute décision de dimensionnement réel doit être validée par un ingénieur qualifié et des analyses de laboratoire certifiées.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="section-inner">
+    <div class="contact-layout">
+      <div>
+        <div class="section-tag">Contact</div>
+        <div class="contact-info-title">Accéder à TRACE ou en savoir plus</div>
+        <p class="contact-info-text">TRACE est un système d'aide à la décision destiné aux ingénieurs en traitement des eaux de surface. Contactez-nous pour une démonstration, une intégration ou toute question technique.</p>
+        <div class="contact-detail"><div class="contact-detail-icon">📧</div><div><a href="mailto:houdachal88.18@gmail.com" style="color:var(--accent);font-weight:500;text-decoration:none;display:block;">houdachal88.18@gmail.com</a><a href="mailto:salouadehbi7@gmail.com" style="color:var(--accent);font-weight:500;text-decoration:none;display:block;">salouadehbi7@gmail.com</a></div></div>
+        <div class="contact-detail"><div class="contact-detail-icon">📍</div><span>Maroc — disponible à l'international</span></div>
+        <div class="contact-detail"><div class="contact-detail-icon">🔬</div><span>Domaine : traitement des eaux de surface</span></div>
+        <div class="contact-detail"><div class="contact-detail-icon">📄</div><span>Référentiel : NM 03.7.001 (Maroc)</span></div>
+      </div>
+      <div class="contact-form">
+        <h3 style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.2rem;margin-bottom:1.5rem;">Envoyer un message</h3>
+        <div class="form-group"><label class="form-label">Nom complet</label><input class="form-input" id="c-nom" type="text" placeholder="Votre nom"></div>
+        <div class="form-group"><label class="form-label">Email professionnel</label><input class="form-input" id="c-email" type="email" placeholder="nom@organisme.ma"></div>
+        <div class="form-group"><label class="form-label">Organisme / Station</label><input class="form-input" id="c-org" type="text" placeholder="ONEE, RADEEMA, bureau d'études…"></div>
+        <div class="form-group"><label class="form-label">Message</label><textarea class="form-input" id="c-msg" rows="4" placeholder="Décrivez votre besoin…" style="resize:vertical;"></textarea></div>
+        <button class="contact-submit" id="contact-submit-btn">Envoyer le message</button>
+        <div id="contact-success" style="display:none;margin-top:1rem;background:var(--blue-50);border:1px solid rgba(26,95,173,0.2);border-radius:10px;padding:1rem;color:var(--blue-600);font-size:0.9rem;text-align:center;">✅ Votre client mail s'est ouvert. Merci !</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <strong>TRACE</strong> — Treatment Recommendation and Aqua Chain Engine — Version 7.0
+  <div class="footer-refs">
+    <span>NM 03.7.001 — Norme Marocaine (IMANOR)</span>
+  </div>
+</footer>
+
+<!-- AI CHAT -->
+<button id="ai-chat-btn" title="Assistant IA TRACE">💧</button>
+<div id="ai-chat-panel">
+  <div class="chat-panel-header">
+    <div><div class="chat-panel-title">Assistant TRACE — IA</div><div class="chat-panel-sub">Traitement des eaux de surface</div></div>
+    <button class="chat-panel-close" id="ai-chat-close">✕</button>
+  </div>
+  <div class="chat-messages" id="chat-messages">
+    <div class="chat-msg bot">Bonjour ! Je suis l'assistant IA de TRACE, spécialisé dans le traitement des eaux de surface. Posez-moi vos questions sur les procédés, normes, dosages ou l'interprétation de vos résultats. 💧</div>
+  </div>
+  <div class="chat-input-row">
+    <input class="chat-input" id="chat-input" type="text" placeholder="Ex: Comment choisir un coagulant ?" maxlength="400">
+    <button class="chat-send" id="chat-send">➤</button>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════
+// AUTH SYSTEM
+// ════════════════════════════════════════════════════════
+function getUsers() { try { return JSON.parse(localStorage.getItem('trace_users') || '{}'); } catch(e) { return {}; } }
+function saveUsers(u) { localStorage.setItem('trace_users', JSON.stringify(u)); }
+function getCurrentUser() { try { return JSON.parse(localStorage.getItem('trace_current') || 'null'); } catch(e) { return null; } }
+function setCurrentUser(u) { localStorage.setItem('trace_current', JSON.stringify(u)); }
+
+function openAuthModal() {
+  document.getElementById('auth-modal').classList.add('active');
+}
+document.getElementById('auth-modal-close').onclick = () => document.getElementById('auth-modal').classList.remove('active');
+document.getElementById('auth-modal').addEventListener('click', e => { if(e.target === document.getElementById('auth-modal')) document.getElementById('auth-modal').classList.remove('active'); });
+
+function switchTab(tab) {
+  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+  document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+  document.getElementById('form-login').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('form-register').style.display = tab === 'register' ? 'block' : 'none';
+}
+
+function showAuthMsg(id, text, type) {
+  const el = document.getElementById(id);
+  el.textContent = text; el.className = 'auth-msg ' + type; el.style.display = 'block';
+}
+
+function doLogin() {
+  const email = document.getElementById('l-email').value.trim();
+  const pass = document.getElementById('l-pass').value;
+  if (!email || !pass) { showAuthMsg('login-msg', 'Veuillez remplir tous les champs.', 'error'); return; }
+  const users = getUsers();
+  if (!users[email] || users[email].pass !== btoa(pass)) {
+    showAuthMsg('login-msg', 'Email ou mot de passe incorrect.', 'error'); return;
+  }
+  setCurrentUser({ email, name: users[email].name, org: users[email].org });
+  document.getElementById('auth-modal').classList.remove('active');
+  updateNavAuth(); renderHistorique();
+}
+
+function doRegister() {
+  const name = document.getElementById('r-name').value.trim();
+  const email = document.getElementById('r-email').value.trim();
+  const org = document.getElementById('r-org').value.trim();
+  const pass = document.getElementById('r-pass').value;
+  if (!name || !email || !pass) { showAuthMsg('register-msg', 'Veuillez remplir tous les champs obligatoires.', 'error'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showAuthMsg('register-msg', 'Email invalide.', 'error'); return; }
+  if (pass.length < 6) { showAuthMsg('register-msg', 'Mot de passe : minimum 6 caractères.', 'error'); return; }
+  const users = getUsers();
+  if (users[email]) { showAuthMsg('register-msg', 'Cet email est déjà utilisé.', 'error'); return; }
+  users[email] = { name, org, pass: btoa(pass) };
+  saveUsers(users);
+  setCurrentUser({ email, name, org });
+  document.getElementById('auth-modal').classList.remove('active');
+  showAuthMsg('register-msg', 'Compte créé avec succès !', 'success');
+  updateNavAuth(); renderHistorique();
+}
+
+function doLogout() {
+  localStorage.removeItem('trace_current');
+  updateNavAuth(); renderHistorique();
+}
+
+function updateNavAuth() {
+  const u = getCurrentUser();
+  const area = document.getElementById('nav-auth-area');
+  if (u) {
+    area.innerHTML = `<div class="nav-user-btn" onclick="doLogout()" title="Déconnexion">👤 ${u.name.split(' ')[0]} ↩</div>`;
+  } else {
+    area.innerHTML = `<div class="nav-user-btn" onclick="openAuthModal()">👤 Connexion</div>`;
+  }
+}
+updateNavAuth();
+
+// ════════════════════════════════════════════════════════
+// HISTORY
+// ════════════════════════════════════════════════════════
+function getHistory(email) {
+  try { return JSON.parse(localStorage.getItem('trace_history_' + email) || '[]'); } catch(e) { return []; }
+}
+function saveHistory(email, hist) {
+  localStorage.setItem('trace_history_' + email, JSON.stringify(hist));
+}
+function addToHistory(u, analysisData) {
+  if (!u) return;
+  const hist = getHistory(u.email);
+  hist.unshift({ id: Date.now(), date: new Date().toLocaleString('fr-FR'), station: analysisData.station, lieu: analysisData.lieu, filiere: analysisData.filiere, data: analysisData });
+  if (hist.length > 50) hist.pop();
+  saveHistory(u.email, hist);
+  renderHistorique();
+}
+
+function renderHistorique() {
+  const u = getCurrentUser();
+  const cont = document.getElementById('historique-content');
+  if (!u) {
+    cont.innerHTML = `<div class="history-gate"><div style="font-size:2.5rem;margin-bottom:1rem;">🗂️</div><p>Connectez-vous pour accéder à l'historique de vos analyses et les retrouver par station.</p><button class="btn-hero" onclick="openAuthModal()">Se connecter / Créer un compte</button></div>`;
+    return;
+  }
+  const hist = getHistory(u.email);
+  if (hist.length === 0) {
+    cont.innerHTML = `<div class="empty-hist"><div class="empty-hist-icon">📋</div><p>Aucune analyse enregistrée.<br>Lancez votre première analyse ci-dessus.</p><a href="#analyse" class="btn-hero" style="display:inline-flex;margin-top:1rem;">Analyser mon eau →</a></div>`;
+    return;
+  }
+  const cards = hist.map(h => `
+    <div class="history-card">
+      <div class="history-card-header">
+        <span class="history-station">🏭 ${h.station}${h.lieu ? ' — ' + h.lieu : ''}</span>
+        <span class="history-date">${h.date}</span>
+      </div>
+      <div class="history-card-body">
+        <div class="history-filiere">${(h.filiere || []).slice(0,5).map(s => `<span>${s}</span>`).join('')}${(h.filiere||[]).length > 5 ? `<span>+${(h.filiere||[]).length-5}</span>` : ''}</div>
+        <div class="history-actions">
+          <button class="btn-view-hist" onclick="viewHistory(${h.id})">Voir →</button>
+          <button class="btn-del-hist" onclick="deleteHistory(${h.id})">✕</button>
+        </div>
+      </div>
+    </div>`).join('');
+  cont.innerHTML = `<div class="history-list">${cards}</div>`;
+}
+
+function deleteHistory(id) {
+  const u = getCurrentUser(); if (!u) return;
+  const hist = getHistory(u.email).filter(h => h.id !== id);
+  saveHistory(u.email, hist); renderHistorique();
+}
+
+function viewHistory(id) {
+  const u = getCurrentUser(); if (!u) return;
+  const h = getHistory(u.email).find(x => x.id === id); if (!h) return;
+  const content = document.getElementById('hist-detail-content');
+  if (h.data && h.data.resultHtml) {
+    content.innerHTML = `<div style="margin-bottom:1rem;font-size:0.85rem;color:var(--text-muted);">📅 Analyse du ${h.date}</div>` + h.data.resultHtml;
+  } else {
+    content.innerHTML = `<p>Détails non disponibles pour cette entrée.</p>`;
+  }
+  document.getElementById('hist-detail-modal').classList.add('active');
+}
+function closeHistDetail() { document.getElementById('hist-detail-modal').classList.remove('active'); }
+
+renderHistorique();
+
+// ════════════════════════════════════════════════════════
+// ANALYSE ENGINE — FIDELE AU CODE PYTHON
+// ════════════════════════════════════════════════════════
+function gv(id) { const v = parseFloat(document.getElementById(id).value); return isNaN(v) || v < 0 ? null : v; }
+
+document.getElementById('btn-analyser').addEventListener('click', function() {
+  const station = document.getElementById('a-station').value.trim() || 'Station non nommée';
+  const lieu = document.getElementById('a-lieu').value.trim();
+
+  // Lecture valeurs
+  const ph=gv('a-ph'), turb=gv('a-turb'), cond=gv('a-cond'), mes=gv('a-mes');
+  const color=gv('a-color'), mo=gv('a-mo'), dbo=gv('a-dbo');
+  const tac=gv('a-tac'), th=gv('a-th');
+  const nh4=gv('a-nh4'), no3=gv('a-no3'), no2=gv('a-no2');
+  const fluo=gv('a-fluo'), cl=gv('a-cl'), so4=gv('a-so4');
+  const fe=gv('a-fe'), mn=gv('a-mn'), al=gv('a-al');
+  const zn=gv('a-zn'), cu=gv('a-cu'), hg=gv('a-hg');
+  const as_=gv('a-as'), cd=gv('a-cd'), cr=gv('a-cr');
+  const pb=gv('a-pb'), se=gv('a-se'), ni=gv('a-ni'), cn=gv('a-cn');
+  const pest=gv('a-pest'), pestt=gv('a-pestt');
+  const ecoli=gv('a-ecoli'), coli=gv('a-coli'), entero=gv('a-entero'), clos=gv('a-clos');
+
+  const ntAlerts = [];
+  const normAlerts = [];
+  const recos = [];
+
+  // ── ETAPE 1 : NON-TRAITABILITE (seuils cat. A3) ──
+  // As>100, Cd>5, Cr>50, Pb>50, Hg>1, Se>10, Ni>50, CN>50, Pest>0.1, PestT>0.5
+  const SUBSTANCES_NT = [
+    {v:as_, seuil:100, label:'Arsenic As', unite:'µg/L'},
+    {v:cd,  seuil:5,   label:'Cadmium Cd', unite:'µg/L'},
+    {v:cr,  seuil:50,  label:'Chrome total Cr', unite:'µg/L'},
+    {v:pb,  seuil:50,  label:'Plomb Pb', unite:'µg/L'},
+    {v:hg,  seuil:1,   label:'Mercure Hg', unite:'µg/L'},
+    {v:se,  seuil:10,  label:'Sélénium Se', unite:'µg/L'},
+    {v:ni,  seuil:50,  label:'Nickel Ni', unite:'µg/L'},
+    {v:cn,  seuil:70,  label:'Cyanures CN⁻', unite:'µg/L'},
+    {v:pest, seuil:0.1, label:'Pesticides (subst.)', unite:'µg/L'},
+    {v:pestt,seuil:0.5, label:'Pesticides (total)', unite:'µg/L'},
+  ];
+  let nonTraitable = false;
+  SUBSTANCES_NT.forEach(({v,seuil,label,unite}) => {
+    if(v !== null) {
+      if(v > seuil) {
+        ntAlerts.push({type:'err', title:`⛔ Non-traitabilité — ${label}`, text:`${v} ${unite} dépasse le seuil A3 (${seuil} ${unite}) → EAU NON TRAITABLE par filière conventionnelle.`});
+        nonTraitable = true;
+      } else {
+        ntAlerts.push({type:'ok', title:`✓ ${label}`, text:`${v} ${unite} ≤ seuil A3 (${seuil} ${unite})`});
+      }
+    } else {
+      ntAlerts.push({type:'info', title:`? ${label}`, text:`Non mesuré — NT non vérifiable (seuil A3 = ${seuil} ${unite})`});
+    }
+  });
+
+  if(nonTraitable) {
+    const html = buildResultHtml(station, lieu, [], ntAlerts, [], [], 0, 0, true);
+    showResult(html);
+    const u = getCurrentUser();
+    if(u) addToHistory(u, {station, lieu, filiere:[], resultHtml: html});
+    return;
+  }
+
+  // ── ETAPE 2 : HORS-NORME (VMA NM 03.7.001) ──
+  function chkVMA(v, min, max, label, unite, normStr) {
+    if(v === null) return;
+    let hors = false;
+    if(min !== null && v < min) hors = true;
+    if(max !== null && v > max) hors = true;
+    if(max === 0 && v > 0) hors = true;
+    if(hors) normAlerts.push({type:'warn', title:`⚠ ${label} hors norme`, text:`${v} ${unite} — VMA : ${normStr}`});
+    else normAlerts.push({type:'ok', title:`✓ ${label} conforme`, text:`${v} ${unite} — OK (${normStr})`});
+  }
+  chkVMA(ph, 6.5, 8.5, 'pH','','6,5–8,5');
+  chkVMA(turb, null, 5, 'Turbidité','NTU','≤ 5 NTU');
+  chkVMA(nh4, null, 0.5, 'Ammonium NH₄','mg/L','≤ 0,5 mg/L');
+  chkVMA(no3, null, 50, 'Nitrates NO₃','mg/L','≤ 50 mg/L');
+  chkVMA(no2, null, 0.5, 'Nitrites NO₂','mg/L','≤ 0,5 mg/L');
+  chkVMA(fe, null, 0.3, 'Fer Fe','mg/L','≤ 0,3 mg/L');
+  chkVMA(mn, null, 0.5, 'Manganèse Mn','mg/L','≤ 0,5 mg/L');
+  chkVMA(cond, null, 2700, 'Conductivité','µS/cm','≤ 2700 µS/cm');
+  chkVMA(fluo, null, 1.5, 'Fluorures F⁻','mg/L','≤ 1,5 mg/L');
+  chkVMA(cl, null, 750, 'Chlorures Cl⁻','mg/L','≤ 750 mg/L');
+  chkVMA(so4, null, 400, 'Sulfates SO₄','mg/L','≤ 400 mg/L');
+  chkVMA(al, null, 0.2, 'Aluminium Al','mg/L','≤ 0,2 mg/L');
+  chkVMA(zn, null, 3, 'Zinc Zn','mg/L','≤ 3 mg/L');
+  chkVMA(cu, null, 2, 'Cuivre Cu','mg/L','≤ 2 mg/L');
+  chkVMA(hg, null, 1, 'Mercure Hg','µg/L','≤ 1 µg/L');
+  chkVMA(as_, null, 10, 'Arsenic As','µg/L','≤ 10 µg/L');
+  // Recommandation spécifique Arsenic
+  if(as_ !== null) {
+    if(as_ > 10 && as_ <= 100) {
+      recos.push({type:'warn', title:`Arsenic As = ${as_} µg/L (10–100 µg/L) → Traitement spécifique`, text:'Adoucissement à la chaux ou échange ionique (résines sélectives As). En cas d\'échec ou de concentration proche de 100 µg/L : osmose inverse (taux d\'abattement > 95%).'});
+    }
+  }
+  chkVMA(cd, null, 3, 'Cadmium Cd','µg/L','≤ 3 µg/L');
+  // Recommandation spécifique Cadmium
+  if(cd !== null) {
+    if(cd > 3 && cd <= 5) {
+      recos.push({type:'warn', title:`Cadmium Cd = ${cd} µg/L (3–5 µg/L) → Traitement spécifique`, text:'Adoucissement à la chaux, échange ionique (résines cationiques) ou charbon actif en grain (CAG). Vérifier le dépassement du seuil NT A3 (> 5 µg/L).'});
+    }
+  }
+  chkVMA(cr, null, 50, 'Chrome total Cr','µg/L','≤ 50 µg/L');
+  chkVMA(pb, null, 10, 'Plomb Pb','µg/L','≤ 10 µg/L');
+  chkVMA(se, null, 10, 'Sélénium Se','µg/L','≤ 10 µg/L');
+  chkVMA(ni, null, 20, 'Nickel Ni','µg/L','≤ 20 µg/L');
+  chkVMA(cn, null, 70, 'Cyanures CN⁻','µg/L','≤ 70 µg/L');
+  chkVMA(pest, null, 0.1, 'Pesticides (subst.)','µg/L','≤ 0,1 µg/L');
+  chkVMA(pestt, null, 0.5, 'Pesticides (total)','µg/L','≤ 0,5 µg/L');
+  chkVMA(mo, null, 5, 'Matière organique','mg/L O₂','≤ 5 mg/L O₂');
+  // Bactério : VMA = 0
+  [{v:ecoli,l:'E. coli / Colif. fécaux'},{v:coli,l:'Coliformes totaux'},{v:entero,l:'Entérocoques'},{v:clos,l:'Clostridium SR'}].forEach(({v,l}) => {
+    if(v !== null) {
+      if(v > 0) normAlerts.push({type:'err', title:`⛔ ${l} détecté`, text:`${v} germes/100mL — VMA : 0/100mL`});
+      else normAlerts.push({type:'ok', title:`✓ ${l}`, text:`Absent — conforme`});
+    }
+  });
+
+  // ── ETAPE 3 : RECOMMANDATIONS PAR PARAMETRE (fidèle au code Python) ──
+
+  // pH
+  if(ph !== null) {
+    if(ph < 6.5) recos.push({type:'warn', title:'pH < 6,5 → Neutralisation OBLIGATOIRE', text:'Ajout Ca(OH)₂ (eau de chaux) pour remonter le pH.'});
+    else if(ph > 8.5) recos.push({type:'warn', title:'pH > 8,5 → Acidification', text:'Acidification au HCl ou injection CO₂.'});
+    else recos.push({type:'ok', title:`pH = ${ph} — Acceptable [6,5–8,5]`, text:'Pas de correction de pH requise.'});
+  }
+
+  // Coagulant selon pH
+  if(ph !== null) {
+    if(ph >= 6.8 && ph <= 7.5) {
+      recos.push({type:'ok', title:`Coagulant recommandé : Al₂(SO₄)₃ (sulfate d'alumine)`, text:`pH ${ph} dans la plage optimale [6,8–7,5]. FeCl₃ est également utilisable [5,0–9,0].`});
+    } else if(ph >= 5.0 && ph < 6.8) {
+      recos.push({type:'info', title:`Coagulant recommandé : FeCl₃ (chlorure ferrique)`, text:`pH ${ph} hors plage optimale du sulfate d'alumine. FeCl₃ couvre [5,0–9,0].`});
+    } else if(ph > 7.5 && ph <= 9.0) {
+      recos.push({type:'info', title:`Coagulant recommandé : FeCl₃ (chlorure ferrique)`, text:`pH ${ph} hors plage optimale du sulfate d'alumine. FeCl₃ couvre [5,0–9,0].`});
+    } else if(ph < 5.0) {
+      recos.push({type:'err', title:`pH ${ph} < 5,0 — hors plage des deux coagulants`, text:'Neutralisation préalable obligatoire avant application du coagulant.'});
+    } else {
+      recos.push({type:'err', title:`pH ${ph} > 9,0 — hors plage des deux coagulants`, text:'Acidification préalable obligatoire avant application du coagulant.'});
+    }
+  } else {
+    recos.push({type:'info', title:'pH non mesuré → FeCl₃ par défaut', text:'Chlorure ferrique FeCl₃ (plage pH 5,0–9,0) — plage la plus large.'});
+  }
+
+  // Ammonium — FIDELE : VMA=0.5, dose Cl2=10×[NH4]
+  if(nh4 !== null) {
+    if(nh4 <= 0.5) recos.push({type:'ok', title:`Ammonium NH₄ = ${nh4} mg/L ≤ 0,5 mg/L`, text:'Dans la norme. Pas de surdosage Cl₂ requis.'});
+    else if(nh4 <= 5.0) {
+      const dose = (nh4 * 10).toFixed(1);
+      recos.push({type:'warn', title:`Ammonium NH₄ = ${nh4} mg/L → Chloration au point de rupture`, text:`Surdosage Cl₂ nécessaire en pré-chloration :\n<strong>Dose Cl₂ = 10 × ${nh4} = ${dose} mg/L</strong>\n(Relation : 1 mg/L NH₄ = 10 mg/L Cl₂ — NM 03.7.001)`});
+    } else if(nh4 <= 50) {
+      recos.push({type:'err', title:`Ammonium NH₄ = ${nh4} mg/L → Nitrification biologique`, text:'Concentration trop élevée pour la chloration seule. Nitrification biologique recommandée.'});
+    } else {
+      recos.push({type:'err', title:`Ammonium NH₄ = ${nh4} mg/L → Osmose inverse`, text:'Osmose inverse (OI) ou échange ionique (résine clinoptilolite) requis.'});
+    }
+  }
+
+  // ── FER / MANGANESE — REGLE CONJOINTE (fidèle au code Python) ──
+  // Fe ≤ 0.3 : dans la norme
+  // Fe > 0.3 ET Mn ≤ 0.5 : Aération naturelle SEULEMENT
+  // Fe > 0.3 ET Mn > 0.5 : Oxydation KMnO₄ (PAS aération seule)
+  // Mn seul : pas de traitement spécifique
+  if(fe !== null) {
+    if(fe <= 0.3) {
+      recos.push({type:'ok', title:`Fer Fe = ${fe} mg/L ≤ 0,3 mg/L`, text:'Dans la norme. Aucun traitement spécifique Fe/Mn requis.'});
+    } else {
+      // Fe > 0.3
+      if(mn !== null) {
+        if(mn > 0.5) {
+          recos.push({type:'warn', title:`Fer Fe = ${fe} mg/L > 0,3 ET Manganèse Mn = ${mn} mg/L > 0,5 → Oxydation KMnO₄`, text:'Condition conjointe Fe + Mn atteinte. RECOMMANDATION : Oxydation par KMnO₄ (permanganate de potassium).'});
+        } else {
+          recos.push({type:'warn', title:`Fer Fe = ${fe} mg/L > 0,3 / Mn = ${mn} mg/L ≤ 0,5 → Aération naturelle`, text:'Condition KMnO₄ non atteinte (Mn ≤ 0,5 mg/L). RECOMMANDATION : Aération naturelle.'});
+        }
+      } else {
+        // Mn non mesuré
+        recos.push({type:'warn', title:`Fer Fe = ${fe} mg/L > 0,3 → Aération naturelle`, text:'Mn non mesuré. Condition KMnO₄ (Fe > 0,3 ET Mn > 0,5) non vérifiable. Aération naturelle appliquée par défaut.'});
+      }
+    }
+  } else if(mn !== null) {
+    // Fe non mesuré, Mn seul
+    if(mn > 0.5) {
+      recos.push({type:'info', title:`Manganèse Mn = ${mn} mg/L > 0,5 mg/L`, text:'Fe non mesuré — condition KMnO₄ non vérifiable. Mn seul ne déclenche pas de traitement selon le référentiel NM.'});
+    } else {
+      recos.push({type:'ok', title:`Manganèse Mn = ${mn} mg/L ≤ 0,5 mg/L`, text:'Dans la norme.'});
+    }
+  }
+
+  // Nitrates
+  if(no3 !== null) {
+    if(no3 <= 50) recos.push({type:'ok', title:`Nitrates NO₃ = ${no3} mg/L ≤ 50 mg/L`, text:'Dans la norme.'});
+    else if(no3 <= 100) recos.push({type:'warn', title:`Nitrates NO₃ = ${no3} mg/L → Dénitrification`, text:'Dénitrification biologique ou échange ionique (résines sélectives NO₃⁻).'});
+    else recos.push({type:'err', title:`Nitrates NO₃ = ${no3} mg/L → Osmose inverse`, text:'Osmose inverse (taux de rejet > 95%) ou électrodialyse.'});
+  }
+
+  // Nitrites
+  if(no2 !== null) {
+    if(no2 <= 0.5) recos.push({type:'ok', title:`Nitrites NO₂ = ${no2} mg/L ≤ 0,5 mg/L`, text:'Dans la norme.'});
+    else recos.push({type:'warn', title:`Nitrites NO₂ = ${no2} mg/L > 0,5 mg/L → Échange d'ions`, text:'Échange d\'ions requis.'});
+  }
+
+  // Fluorures
+  if(fluo !== null) {
+    if(fluo < 0.5) recos.push({type:'info', title:`Fluorures F⁻ = ${fluo} mg/L < 0,5 mg/L`, text:'Concentration faible. Fluoruration artificielle peut être envisagée.'});
+    else if(fluo <= 1.5) recos.push({type:'ok', title:`Fluorures F⁻ = ${fluo} mg/L ≤ 1,5 mg/L`, text:'Dans la norme. Pas de traitement spécifique.'});
+    else if(fluo <= 4.0) recos.push({type:'warn', title:`Fluorures F⁻ = ${fluo} mg/L → Défluoration`, text:'Défluoration / adoucissement à la chaux.'});
+    else recos.push({type:'err', title:`Fluorures F⁻ = ${fluo} mg/L > 4 mg/L → Osmose inverse`, text:'Osmose inverse OBLIGATOIRE (taux d\'abattement > 95%).'});
+  }
+
+  // TAC
+  if(tac !== null) {
+    if(tac < 8) recos.push({type:'warn', title:`TAC = ${tac} °f < 8 °f → Ajout Ca(OH)₂`, text:'Ajout de lait de chaux Ca(OH)₂ pour remonter le TAC et stabiliser le pH.'});
+    else if(tac <= 14) recos.push({type:'ok', title:`TAC = ${tac} °f — Plage optimale [8–14 °f]`, text:'Pas de traitement spécifique.'});
+    else recos.push({type:'warn', title:`TAC = ${tac} °f > 14 °f → Acidification`, text:'Acidification au HCl ou injection CO₂.'});
+  }
+
+  // Matière organique
+  if(mo !== null) {
+    if(mo < 3) recos.push({type:'ok', title:`Matière organique = ${mo} mg/L O₂ < 3 mg/L`, text:'Charge organique faible. Pas de traitement spécifique.'});
+    else if(mo <= 50) recos.push({type:'warn', title:`Matière organique = ${mo} mg/L O₂ → Pré-chloration Cl₂`, text:'Pré-chloration à faible dose (Cl₂) pour oxydation des micropolluants résiduels et désinfection préventive.'});
+    else recos.push({type:'err', title:`Matière organique = ${mo} mg/L O₂ > 50 → CAP (pré-chloration supprimée)`, text:'Charbon actif en poudre (CAP). Dose typique : 5–50 mg/L selon la qualité de l\'eau brute. La pré-chloration est supprimée de la chaîne : une forte charge organique en présence de Cl₂ génère des sous-produits halogénés (THM, HAA) dangereux pour la santé.'});
+  }
+
+  // Chlorures
+  if(cl !== null) {
+    if(cl <= 250) recos.push({type:'ok', title:`Chlorures Cl⁻ = ${cl} mg/L ≤ 250 mg/L`, text:'Pas de problème organoleptique.'});
+    else if(cl <= 750) recos.push({type:'info', title:`Chlorures Cl⁻ = ${cl} mg/L 250–750 mg/L`, text:'Goût salé perceptible. Aucun procédé prescrit dans le référentiel NM.'});
+    else recos.push({type:'err', title:`Chlorures Cl⁻ = ${cl} mg/L > 750 mg/L → Osmose inverse`, text:'Osmose inverse ou électrodialyse requis.'});
+  }
+
+  // Dureté TH
+  if(th !== null) {
+    if(th < 15) recos.push({type:'warn', title:`TH = ${th} °f — Eau douce`, text:'Eau douce, peut être agressive (corrosive). Reminéralisation possible.'});
+    else recos.push({type:'warn', title:`TH = ${th} °f > 15 °f — Eau dure`, text:'Eau dure. Échangeur cationique (potassium/sodium) pour adoucissement.'});
+  }
+
+  // Sulfates
+  if(so4 !== null) {
+    if(so4 <= 400) recos.push({type:'ok', title:`Sulfates SO₄ = ${so4} mg/L ≤ 400 mg/L`, text:'Dans la norme.'});
+    else recos.push({type:'warn', title:`Sulfates SO₄ = ${so4} mg/L > 400 mg/L → Osmose inverse`, text:'Osmose inverse ou nanofiltration.'});
+  }
+
+  // Mercure
+  if(hg !== null) {
+    if(hg <= 1) recos.push({type:'ok', title:`Mercure Hg = ${hg} µg/L ≤ 1 µg/L`, text:'Dans la norme.'});
+    else if(hg <= 100) recos.push({type:'err', title:`Mercure Hg = ${hg} µg/L > 1 µg/L → Adoucissement chaux`, text:'Adoucissement à la chaux.'});
+    else recos.push({type:'err', title:`Mercure Hg = ${hg} µg/L > 100 µg/L → Osmose inverse`, text:'Osmose inverse.'});
+  }
+
+  // Sélénium
+  if(se !== null) {
+    if(se <= 10) recos.push({type:'ok', title:`Sélénium Se = ${se} µg/L ≤ 10 µg/L`, text:'Dans la norme.'});
+    else if(se <= 1000) recos.push({type:'warn', title:`Sélénium Se = ${se} µg/L → Échange d'ions`, text:'Échange d\'ions.'});
+    else recos.push({type:'err', title:`Sélénium Se = ${se} µg/L > 1000 µg/L → Osmose inverse`, text:'Osmose inverse.'});
+  }
+
+  // Zinc
+  if(zn !== null) {
+    if(zn <= 3) recos.push({type:'ok', title:`Zinc Zn = ${zn} mg/L ≤ 3 mg/L`, text:'Dans la norme.'});
+    else if(zn <= 100) recos.push({type:'warn', title:`Zinc Zn = ${zn} mg/L → Échange d'ions`, text:'Échange d\'ions.'});
+    else recos.push({type:'err', title:`Zinc Zn = ${zn} mg/L > 100 mg/L → Osmose inverse`, text:'Osmose inverse.'});
+  }
+
+  // Pesticides
+  if(pest !== null) {
+    if(pest <= 0.1) recos.push({type:'ok', title:`Pesticides = ${pest} µg/L ≤ 0,1 µg/L`, text:'Dans la norme.'});
+    else recos.push({type:'warn', title:`Pesticides = ${pest} µg/L > 0,1 µg/L → CAP`, text:'Charbon actif en poudre (CAP) recommandé pour l\'élimination des pesticides.'});
+  }
+
+  // Aluminium
+  if(al !== null) {
+    if(al <= 0.1) recos.push({type:'ok', title:`Aluminium Al = ${al} mg/L ≤ 0,1 mg/L`, text:'Excellent. Conforme grandes stations (≤ 0,1 mg/L).'});
+    else if(al <= 0.2) recos.push({type:'ok', title:`Aluminium Al = ${al} mg/L ≤ 0,2 mg/L`, text:'Acceptable (petites stations ≤ 10 000 pers.). Optimiser pH de coagulation.'});
+    else recos.push({type:'warn', title:`Aluminium Al = ${al} mg/L > 0,2 mg/L — Hors norme`, text:'Réduire le coagulant alumineux, renforcer la filtration. Minimiser par pH optimal, bon mélange, bonne agitation.'});
+  }
+
+  // Cuivre
+  if(cu !== null) {
+    if(cu <= 2) recos.push({type:'ok', title:`Cuivre Cu = ${cu} mg/L ≤ 2 mg/L`, text:'Dans la norme.'});
+    else recos.push({type:'warn', title:`Cuivre Cu = ${cu} mg/L > 2 mg/L — Coloration probable`, text:'Coloration bleue-verdâtre de l\'eau probable.'});
+  }
+
+  // ── ETAPE 4 : CONSTRUCTION FILIERE ──
+  // Règles fidèles au code Python NM 03.7.001 :
+  //   - Aération : Fe > 0,3 ET Mn ≤ 0,5 (ou Mn non mesuré) → chaîne
+  //   - KMnO₄   : Fe > 0,3 ET Mn > 0,5 → recommandation uniquement, PAS dans chaîne, PAS d'aération
+  //   - CAG      : supprimé
+  //   - CAP      : MO > 50 mg/L O₂ → recommandation uniquement, pas dans chaîne
+  //   - Pré-chloration : supprimée si MO > 50 mg/L O₂ (risque de THM avec forte charge organique)
+  const filiere = [];
+
+  // Flag : MO > 50 → CAP requis → PAS de pré-chloration
+  const capRequired = (mo !== null && mo > 50);
+
+  // 1. Dégrillage — TOUJOURS obligatoire
+  filiere.push({nom:'Dégrillage', ordre:0, source:'Obligatoire en tête de filière'});
+
+  // 2. Pré-chloration — systématique SAUF si MO > 50 mg/L (CAP requis)
+  if(!capRequired) {
+    filiere.push({nom:'Pré-chloration (Cl₂)', ordre:1, source:'Pré-traitement oxydant — systématique'});
+  }
+
+  // 3. Aération / KMnO₄ — règle fer/manganèse (NM 03.7.001)
+  let aerationAdded = false, kmnO4Added = false;
+  if(fe !== null && fe > 0.3) {
+    if(mn !== null && mn > 0.5) {
+      // Fe > 0.3 ET Mn > 0.5 → KMnO₄ en recommandation, PAS d'aération dans chaîne
+      kmnO4Added = true;
+    } else {
+      // Fe > 0.3 ET (Mn ≤ 0.5 ou Mn non mesuré) → Aération naturelle dans chaîne
+      filiere.push({nom:'Aération naturelle', ordre:3, source:`Fe = ${fe} mg/L > 0,3 mg/L — Mn ≤ 0,5 mg/L`});
+      aerationAdded = true;
+    }
+  }
+
+  // 4. Coagulation/Floculation
+  const needsCoag = (turb === null || turb > 5);
+  if(needsCoag) filiere.push({nom:'Coagulation / Floculation', ordre:4, source:'Turbidité ou paramètres nécessitant une coagulation'});
+
+  // 5. Débourbage — MES > 2000 mg/L
+  if(mes !== null && mes > 2000) {
+    filiere.push({nom:'Débourbage', ordre:5, source:`MES = ${mes} mg/L > 2000 mg/L`});
+    if(needsCoag) filiere.push({nom:'Coag./Floc. post-débourbage', ordre:6, source:'2ᵉ coagulation après débourbage'});
+  }
+
+  // 6. Décantation lamellaire
+  if(needsCoag) filiere.push({nom:'Décantation lamellaire', ordre:7, source:'Séparation des flocs'});
+
+  // 7. Filtration sur sable
+  filiere.push({nom:'Filtration sur sable', ordre:8, source:'Filtration rapide multicouche'});
+
+  // 8. Nanofiltration — conductivité > 2700 ou sulfates > 400
+  const needsNF = (cond !== null && cond > 2700) || (so4 !== null && so4 > 400);
+  if(needsNF) filiere.push({nom:'Nanofiltration', ordre:11, source:'Conductivité > 2700 µS/cm ou sulfates > 400 mg/L'});
+
+  // 9. Chloration finale — TOUJOURS obligatoire
+  filiere.push({nom:'Chloration finale (Cl₂)', ordre:13, source:'Désinfection résiduelle — OBLIGATOIRE en sortie réseau'});
+
+  // 10. Correction pH
+  const needspH = (ph !== null && (ph < 6.5 || ph > 8.5)) || (tac !== null && tac < 8);
+  if(needspH) filiere.push({nom:'Correction pH / Reminéralisation', ordre:14, source:'pH hors plage ou TAC faible'});
+
+  // Trier par ordre
+  filiere.sort((a,b) => a.ordre - b.ordre);
+
+  // Recommandations KMnO₄ (Fe+Mn hors norme)
+  if(kmnO4Added) {
+    recos.push({type:'warn', title:'Permanganate de potassium (KMnO₄) recommandé', text:`Fe = ${fe} mg/L > 0,3 mg/L ET Mn = ${mn} mg/L > 0,5 mg/L → Oxydation par permanganate de potassium (KMnO₄) pour élimination conjointe du fer et du manganèse. Dose typique : 0,5–2 mg/L KMnO₄.`});
+  }
+
+  const filiereNoms = filiere.map(f => f.nom);
+
+  // ── SCORES ──
+  const keyParams = [ph, turb, cond, mes, mo, dbo, nh4, no3, no2, fe, mn, fluo];
+  const nbParams = keyParams.filter(v => v !== null).length;
+  const confiance = Math.min(95, 50 + nbParams * 4);
+  const nbHorsNorme = normAlerts.filter(a => a.type === 'warn' || a.type === 'err').length;
+  const efficacite = nbHorsNorme === 0 ? 98 : Math.min(99, Math.floor(65 + (filiere.length / 12) * 30));
+
+  // Surdosage Cl2
+  let surdosageCl2 = null;
+  if(nh4 !== null && nh4 > 0.5 && nh4 <= 5.0) {
+    surdosageCl2 = { nh4, dose: (nh4 * 10).toFixed(1) };
+  }
+
+  const html = buildResultHtml(station, lieu, filiere, ntAlerts, normAlerts, recos, confiance, efficacite, false, surdosageCl2, aerationAdded, kmnO4Added);
+  showResult(html);
+
+  const u = getCurrentUser();
+  if(u) addToHistory(u, {station, lieu, filiere: filiereNoms, resultHtml: html});
+});
+
+function buildResultHtml(station, lieu, filiere, ntAlerts, normAlerts, recos, confiance, efficacite, nonTraitable, surdosageCl2, aerationAdded, kmnO4Added) {
+  const now = new Date().toLocaleDateString('fr-FR');
+  let html = `<div class="result-wrapper">
+    <div class="result-header">
+      <span style="font-size:1.2rem;">📊</span>
+      <span class="result-header-title">Rapport d'analyse TRACE v7.0</span>
+      <span class="result-station">${station}${lieu ? ' — ' + lieu : ''} | ${now}</span>
+    </div>
+    <div class="result-body">`;
+
+  if(nonTraitable) {
+    html += `<div class="nt-banner">
+      <div class="nt-banner-title">⛔ EAU NON TRAITABLE PAR FILIÈRE CONVENTIONNELLE</div>
+      <div class="nt-banner-text">Un ou plusieurs seuils de non-traitabilité (catégorie A3 — NM 03.7.001) sont dépassés. Traitement spécialisé requis.</div>
+    </div></div></div>`;
+    return html;
+  }
+
+  // ── FILIÈRE : affichage académique sans icônes ──
+  if(filiere.length > 0) {
+    html += `<div style="margin-bottom:2rem;">
+      <div style="font-size:0.72rem;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:1.25rem;display:flex;align-items:center;gap:8px;">
+        <span style="display:inline-block;width:3px;height:16px;background:var(--accent);border-radius:2px;"></span>
+        CHAÎNE DE TRAITEMENT OPTIMALE
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:0;align-items:stretch;">`;
+    filiere.forEach((f, i) => {
+      const isLast = i === filiere.length - 1;
+      const colors = {
+        0:'#0D3E7A', 1:'#1A5FAD', 3:'#2D7DD2', 4:'#1D9E75', 5:'#B86A00',
+        6:'#1D9E75', 7:'#0F6E56', 8:'#2D7DD2', 11:'#6B21A8', 13:'#1A5FAD', 14:'#6B6B6B'
+      };
+      const bg = colors[f.ordre] || '#1A5FAD';
+      html += `<div style="display:flex;align-items:stretch;margin-bottom:8px;">
+        <div style="background:${bg};color:white;border-radius:14px;padding:16px 20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-width:115px;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,0.15);">
+          <span style="font-family:'Syne',sans-serif;font-size:0.82rem;font-weight:700;line-height:1.25;">${f.nom}</span>
+          <span style="font-size:0.6rem;opacity:0.72;line-height:1.3;">${f.source}</span>
+        </div>
+        ${!isLast ? `<div style="display:flex;align-items:center;padding:0 6px;"><span style="font-size:1.5rem;color:var(--accent);font-weight:900;line-height:1;">→</span></div>` : ''}
+      </div>`;
+    });
+    html += `</div></div>`;
+
+    // Surdosage Cl2 info panel
+    if(surdosageCl2) {
+      html += `<div style="background:linear-gradient(135deg,#fff7ed,#fffbf0);border:2px solid #f59e0b;border-radius:16px;padding:1.25rem 1.5rem;margin-bottom:1.5rem;display:flex;gap:12px;align-items:flex-start;">
+        <span style="font-size:1.4rem;flex-shrink:0;">⚡</span>
+        <div>
+          <div style="font-weight:800;font-family:'Syne',sans-serif;font-size:0.95rem;color:#92400e;margin-bottom:4px;">Surdosage Cl₂ requis — Ammonium détecté</div>
+          <div style="font-size:0.87rem;color:#78350f;line-height:1.7;">
+            NH₄ = <strong>${surdosageCl2.nh4} mg/L</strong> > 0,5 mg/L (VMA NM 03.7.001)<br>
+            <strong style="font-size:1rem;">Dose Cl₂ = 10 × ${surdosageCl2.nh4} = ${surdosageCl2.dose} mg/L</strong><br>
+            <span style="opacity:0.8;">Relation : 1 mg/L NH₄⁺ = 10 mg/L Cl₂ (NM 03.7.001)</span>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    html += `<div class="r-divider"></div>`;
+  }
+
+  // ── RECOMMANDATIONS stylées ──
+  const allRecos = [...recos];
+
+  if(normAlerts.filter(a=>a.type==='warn'||a.type==='err').length > 0 || allRecos.length > 0) {
+    // Normes hors-norme uniquement (on masque les "ok")
+    const horsNorme = normAlerts.filter(a => a.type === 'warn' || a.type === 'err');
+    if(horsNorme.length > 0) {
+      html += `<div style="margin-bottom:2rem;">
+        <div style="font-size:0.72rem;font-weight:800;color:#c2410c;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:1.25rem;display:flex;align-items:center;gap:8px;">
+          <span style="display:inline-block;width:3px;height:16px;background:#c2410c;border-radius:2px;"></span>
+          PARAMÈTRES HORS NORME — VMA NM 03.7.001
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:0.75rem;">`;
+      horsNorme.forEach(a => { html += renderRecoCard(a); });
+      html += `</div></div><div class="r-divider"></div>`;
+    }
+
+    if(allRecos.length > 0) {
+      html += `<div style="margin-bottom:2rem;">
+        <div style="font-size:0.72rem;font-weight:800;color:var(--blue-800);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:1.25rem;display:flex;align-items:center;gap:8px;">
+          <span style="display:inline-block;width:3px;height:16px;background:var(--blue-800);border-radius:2px;"></span>
+          RECOMMANDATIONS DE TRAITEMENT
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:0.75rem;">`;
+      allRecos.forEach(a => { html += renderRecoCard(a); });
+      html += `</div></div><div class="r-divider"></div>`;
+    }
+  }
+
+  // Scores
+  html += `<div class="score-row">
+    <div class="score-card"><div class="score-val">${confiance}%</div><div class="score-lbl">Score de confiance</div></div>
+    <div class="score-card"><div class="score-val">${efficacite}%</div><div class="score-lbl">Efficacité estimée</div></div>
+    <div class="score-card"><div class="score-val">${filiere.length}</div><div class="score-lbl">Étapes sélectionnées</div></div>
+  </div>
+  <div style="margin-top:1rem;font-size:0.75rem;color:var(--text-muted);text-align:right;">Réf : NM 03.7.001 — Norme Marocaine (IMANOR)</div>`;
+
+  html += `</div></div>`;
+  return html;
+}
+
+function renderRecoCard(a) {
+  const configs = {
+    ok:   {icon:'✅', bg:'#f0faf6', border:'rgba(29,158,117,0.3)', titleColor:'#065f46'},
+    warn: {icon:'⚠️', bg:'#fffbf0', border:'rgba(239,159,39,0.4)', titleColor:'#92400e'},
+    err:  {icon:'❌', bg:'#fff0f0', border:'rgba(226,75,74,0.3)', titleColor:'#7f1d1d'},
+    info: {icon:'💡', bg:'var(--blue-50)', border:'rgba(26,95,173,0.25)', titleColor:'var(--blue-800)'},
+  };
+  const c = configs[a.type] || configs.info;
+  const txt = (a.text||'').replace(/\n/g,'<br>');
+  return `<div style="background:${c.bg};border:1.5px solid ${c.border};border-radius:14px;padding:1rem 1.25rem;display:flex;gap:10px;align-items:flex-start;">
+    <span style="font-size:1.1rem;flex-shrink:0;margin-top:1px;">${c.icon}</span>
+    <div style="font-size:0.855rem;line-height:1.6;color:var(--text);">
+      <div style="font-weight:700;color:${c.titleColor};margin-bottom:3px;">${a.title}</div>
+      <div>${txt}</div>
+    </div>
+  </div>`;
+}
+
+function showResult(html) {
+  const el = document.getElementById('analyse-result');
+  el.innerHTML = html;
+  el.style.display = 'block';
+  el.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+// ════════════════════════════════════════════════════════
+// CONTACT
+// ════════════════════════════════════════════════════════
+document.getElementById('contact-submit-btn').addEventListener('click', function() {
+  const nom = document.getElementById('c-nom').value.trim();
+  const email = document.getElementById('c-email').value.trim();
+  const org = document.getElementById('c-org').value.trim();
+  const msg = document.getElementById('c-msg').value.trim();
+  if(!nom || !email) { alert('Veuillez renseigner votre nom et email.'); return; }
+  const sujet = encodeURIComponent('Demande TRACE — ' + nom);
+  const corps = encodeURIComponent('Nom : ' + nom + '\nEmail : ' + email + '\nOrganisme : ' + (org||'nd') + '\n\nMessage :\n' + (msg||'(vide)'));
+  window.location.href = 'mailto:salouadehbi7@gmail.com?subject=' + sujet + '&body=' + corps;
+  setTimeout(() => { document.getElementById('contact-success').style.display = 'block'; this.textContent = '✓ Ouvert dans votre messagerie'; }, 800);
+});
+
+// ════════════════════════════════════════════════════════
+// AI CHAT — Assistant TRACE expert eau (NM 03.7.001)
+// ════════════════════════════════════════════════════════
+
+// --- Style markdown simple pour les réponses du bot ---
+const chatStyle = document.createElement('style');
+chatStyle.textContent = `
+.chat-msg.bot { white-space: pre-wrap; }
+.chat-msg.bot b, .chat-msg.bot strong { font-weight: 700; color: var(--blue-800); }
+.chat-msg.bot .chat-section { margin: 4px 0; }
+.chat-msg.bot .chat-bullet { padding-left: 10px; display: block; }
+.chat-msg.bot .chat-norm  { background:rgba(26,95,173,0.08); border-left:3px solid var(--accent); padding:3px 8px; border-radius:4px; margin:3px 0; display:block; font-size:0.82rem; }
+.chat-msg.bot .chat-warn  { background:rgba(239,159,39,0.1); border-left:3px solid #EF9F27; padding:3px 8px; border-radius:4px; margin:3px 0; display:block; font-size:0.82rem; }
+.chat-suggestions { display:flex; flex-wrap:wrap; gap:6px; padding:8px 12px; border-top:1px solid var(--border); }
+.chat-suggest-btn { background:var(--blue-50); border:1px solid rgba(26,95,173,0.25); color:var(--blue-800); border-radius:100px; padding:5px 12px; font-size:0.75rem; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all 0.15s; }
+.chat-suggest-btn:hover { background:var(--accent); color:white; border-color:var(--accent); }
+.chat-typing { display:flex; gap:4px; align-items:center; padding:4px 0; }
+.chat-typing span { width:7px; height:7px; border-radius:50%; background:var(--blue-400); animation:chatBounce 1.2s infinite; }
+.chat-typing span:nth-child(2){animation-delay:0.2s;}
+.chat-typing span:nth-child(3){animation-delay:0.4s;}
+@keyframes chatBounce{0%,80%,100%{transform:translateY(0);}40%{transform:translateY(-6px);}}
+`;
+document.head.appendChild(chatStyle);
+
+// --- Mémoire de la dernière analyse pour le contexte ---
+let lastAnalysisContext = null;
+
+// On intercepte showResult pour mémoriser le contexte
+const _origShowResult = showResult;
+window.showResult = function(html) {
+  _origShowResult(html);
+  // Extraire le contexte textuel simplifié du résultat
+  try {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    lastAnalysisContext = tmp.innerText.slice(0, 2500);
+  } catch(e) { lastAnalysisContext = null; }
+};
+
+// --- SYSTEM PROMPT complet ---
+function buildSystemPrompt() {
+  const VMA_TABLE = `
+NORMES MAROCAINES NM 03.7.001 — Valeurs Maximales Admissibles (VMA) :
+Paramètre            | VMA           | Unité
+---------------------|---------------|--------
+pH                   | 6,5 – 8,5     | —
+Turbidité            | ≤ 5           | NTU
+Ammonium NH₄         | ≤ 0,5         | mg/L
+Nitrates NO₃         | ≤ 50          | mg/L
+Nitrites NO₂         | ≤ 0,5         | mg/L
+Fer Fe               | ≤ 0,3         | mg/L
+Manganèse Mn         | ≤ 0,5         | mg/L
+Matière organique    | ≤ 5           | mg/L O₂
+Conductivité         | ≤ 2700        | µS/cm
+Fluorures F⁻         | ≤ 1,5         | mg/L
+Chlorures Cl⁻        | ≤ 750         | mg/L
+Sulfates SO₄         | ≤ 400         | mg/L
+Aluminium Al         | ≤ 0,2         | mg/L
+Zinc Zn              | ≤ 3           | mg/L
+Cuivre Cu            | ≤ 2           | mg/L
+Plomb Pb             | ≤ 10          | µg/L
+Arsenic As           | ≤ 10          | µg/L  (NT: >100)
+Cadmium Cd           | ≤ 3           | µg/L  (NT: >5)
+Chrome Cr            | ≤ 50          | µg/L  (NT: >50)
+Mercure Hg           | ≤ 1           | µg/L  (NT: >1)
+Sélénium Se          | ≤ 10          | µg/L  (NT: >10)
+Nickel Ni            | ≤ 20          | µg/L  (NT: >50)
+Cyanures CN⁻         | ≤ 70          | µg/L  (NT: >50)
+Pesticides/subst.    | ≤ 0,1         | µg/L  (NT: >0,1)
+Pesticides total     | ≤ 0,5         | µg/L  (NT: >0,5)
+E. coli / Colif.     | 0             | UFC/100mL
+Coliformes totaux    | 0             | UFC/100mL
+Entérocoques         | 0             | UFC/100mL
+Clostridium SR       | 0             | ufc/100mL
+
+SEUILS NON-TRAITABILITÉ (cat. A3) = eau non traitable par filière conventionnelle si dépassés.
+
+PROCÉDÉS DE TRAITEMENT ET LEURS DÉCLENCHEURS :
+1. Dégrillage              → Toujours en tête de filière (obligatoire)
+2. Pré-chloration Cl₂      → Toujours (oxydation algues/bactéries en tête)
+3. Aération naturelle      → Si Fe > 0,3 mg/L ET Mn ≤ 0,5 mg/L
+4. Coagulation/Floculation → Turbidité > 5 NTU ou MES élevées (Al₂(SO₄)₃ ou FeCl₃)
+5. Débourbage              → Si MES > 2000 mg/L (avant coagulation)
+6. Décantation lamellaire  → Après coagulation/floculation
+7. Filtration sur sable    → Toujours (filtration rapide multicouche)
+8. Nanofiltration          → Si conductivité > 2700 µS/cm OU sulfates > 400 mg/L
+9. Chloration finale Cl₂   → Toujours (désinfection résiduelle obligatoire)
+10. Correction pH           → Si pH < 6,5 ou pH > 8,5 ou TAC < 8 °f
+
+RECOMMANDATIONS HORS CHAÎNE (procédés complémentaires) :
+- KMnO₄              → Si Fe > 0,3 ET Mn > 0,5 mg/L (oxydation avant coagulation)
+- CAP (Charbon actif poudre) → Si MO > 3 mg/L O₂ OU pesticides > 0,1 µg/L
+- CAG (Charbon actif grain)  → Idem (version continue en filtre)
+- Dénitrification biologique → Si NO₃ 50–100 mg/L
+- Osmose inverse             → Si NO₃ > 100 mg/L, conductivité >> 2700, Cl⁻ > 750 mg/L
+- Échange ionique            → Si NO₂ > 0,5, Se > 10, Zn > 3 mg/L
+- Défluoration               → Si F⁻ > 1,5 mg/L
+- Adoucissement (échangeur)  → Si TH > 15 °f
+- Nitrification biologique   → Si NH₄ > 5 mg/L
+
+CHOIX DU COAGULANT selon pH :
+- pH 6,8–7,5 → Al₂(SO₄)₃ (sulfate d'alumine) — plage optimale
+- pH 5,0–9,0 → FeCl₃ (chlorure ferrique) — plage plus large
+- pH < 5,0 ou > 9,0 → neutralisation/acidification préalable obligatoire
+
+DOSAGE Cl₂ / NH₄ (chloration au point de rupture) :
+- Si NH₄ > 0,5 mg/L : Dose Cl₂ = 10 × [NH₄⁺] mg/L
+- Exemple : NH₄ = 1,5 mg/L → Dose Cl₂ = 15 mg/L
+`;
+
+  let contextSection = '';
+  if (lastAnalysisContext) {
+    contextSection = `
+=== DERNIÈRE ANALYSE EFFECTUÉE PAR L'UTILISATEUR ===
+${lastAnalysisContext}
+=== FIN DU CONTEXTE D'ANALYSE ===
+Tu peux t'appuyer sur ces résultats pour répondre aux questions de l'utilisateur sur son eau brute spécifique.
+`;
+  }
+
+  return `Tu es TRACE-IA, l'assistant expert intégré au système TRACE (Treatment Recommendation and Aqua Chain Engine), spécialisé dans le traitement des eaux de surface pour la potabilisation selon la norme marocaine NM 03.7.001.
+
+${VMA_TABLE}
+${contextSection}
+
+TES CAPACITÉS — Tu peux répondre à toutes ces questions :
+1. Expliquer pourquoi une chaîne de traitement a été proposée (quels paramètres dépassent la norme, quelle règle a déclenché quel procédé)
+2. Afficher et interpréter les normes marocaines NM 03.7.001 (VMA, seuils NT cat. A3)
+3. Conseiller les procédés adaptés selon les contaminants détectés
+4. Expliquer le fonctionnement de chaque procédé (coagulation, floculation, décantation, filtration, chloration, aération, KMnO₄, CAP, CAG, nanofiltration, osmose inverse, échange ionique, dénitrification...)
+5. Interpréter des valeurs de paramètres d'eau brute saisies par l'utilisateur
+6. Calculer des dosages (Cl₂/NH₄, coagulant, etc.)
+7. Proposer des alternatives de traitement pour un contaminant donné
+8. Expliquer les risques sanitaires d'un dépassement de norme
+9. Répondre aux questions sur les paramètres physico-chimiques et bactériologiques de l'eau
+10. Simuler une chaîne de traitement si l'utilisateur te donne des paramètres
+
+RÈGLES DE RÉPONSE :
+- Réponds TOUJOURS en français
+- Sois pédagogique, précis et structuré
+- Cite toujours la valeur NM 03.7.001 concernée quand tu parles d'un paramètre
+- Utilise des listes à puces pour les étapes ou comparaisons
+- Si l'utilisateur donne des valeurs de paramètres, analyse-les immédiatement par rapport aux VMA NM 03.7.001
+- Si la question concerne la dernière analyse effectuée, utilise le contexte fourni
+- Maximum 350 mots par réponse, sauf si l'utilisateur demande un rapport détaillé
+- Si la question est totalement hors sujet (météo, sport, politique...), redirige poliment vers ton domaine d'expertise`;
+}
+
+// --- Suggestions de questions ---
+const SUGGESTIONS = [
+  "Pourquoi ce procédé a été choisi ?",
+  "Quelles normes NM 03.7.001 sont dépassées ?",
+  "Comment fonctionne la coagulation ?",
+  "Quel coagulant choisir selon le pH ?",
+  "Alternatives pour les nitrates élevés ?",
+  "Risques d'un NH₄ > 0,5 mg/L ?",
+  "Expliquez la chloration au point de rupture",
+  "Quand utiliser le charbon actif ?",
+  "Comment traiter le fer et le manganèse ?",
+  "Qu'est-ce que le seuil non-traitabilité A3 ?",
+];
+
+// --- Rendu markdown minimal ---
+function renderMarkdown(text) {
+  const div = document.createElement('div');
+  // Titres **bold**
+  text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  // Puces - item
+  text = text.replace(/^[-•]\s(.+)$/gm, '<span class="chat-bullet">• $1</span>');
+  // Lignes normatives (contient "mg/L" ou "µg/L" ou "NTU" ou "VMA" ou "NM")
+  text = text.replace(/^(.*?(VMA|NM 03\.7|mg\/L|µg\/L|NTU|UFC).*?)$/gm, (m) => {
+    if(m.includes('⚠') || m.toLowerCase().includes('dépasse')) return `<span class="chat-warn">${m}</span>`;
+    if(m.includes('VMA') || m.includes('NM 03.7') || m.includes('≤') || m.includes('norme')) return `<span class="chat-norm">${m}</span>`;
+    return m;
+  });
+  div.innerHTML = text.replace(/\n/g, '<br>');
+  return div;
+}
+
+// --- Panel chat ---
+const chatBtn = document.getElementById('ai-chat-btn');
+const chatPanel = document.getElementById('ai-chat-panel');
+
+chatBtn.onclick = () => {
+  const isOpen = chatPanel.style.display === 'flex';
+  chatPanel.style.display = isOpen ? 'none' : 'flex';
+  if (!isOpen) {
+    document.getElementById('chat-input').focus();
+    renderSuggestions();
+  }
+};
+document.getElementById('ai-chat-close').onclick = () => { chatPanel.style.display = 'none'; };
+
+// Injecter la zone de suggestions sous les messages
+const suggestZone = document.createElement('div');
+suggestZone.className = 'chat-suggestions';
+suggestZone.id = 'chat-suggestions';
+chatPanel.insertBefore(suggestZone, chatPanel.querySelector('.chat-input-row'));
+
+function renderSuggestions() {
+  const zone = document.getElementById('chat-suggestions');
+  if (!zone) return;
+  // Afficher 4 suggestions aléatoires
+  const picks = [...SUGGESTIONS].sort(() => Math.random() - 0.5).slice(0, 4);
+  zone.innerHTML = picks.map(s =>
+    `<button class="chat-suggest-btn" onclick="useSuggestion(this)">${s}</button>`
+  ).join('');
+}
+
+function useSuggestion(btn) {
+  document.getElementById('chat-input').value = btn.textContent;
+  document.getElementById('chat-suggestions').innerHTML = '';
+  sendChat();
+}
+
+// --- Historique et envoi ---
+const chatHistory = [];
+
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  appendMsg(text, 'user');
+  input.value = '';
+  document.getElementById('chat-suggestions').innerHTML = '';
+  chatHistory.push({ role: 'user', content: text });
+
+  // Indicateur de frappe animé
+  const typingId = appendTyping();
+
+  const GEMINI_API_KEY = 'AIzaSyAZaVLXrXG55BX3OyLbi9AbMFBzlXsxuCY';
+
+  // Convertir l'historique au format Gemini
+  const geminiMessages = chatHistory.map(m => ({
+    role: m.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: m.content }]
+  }));
+  // Ajouter le system prompt comme premier message user si premier message
+  const systemPrompt = buildSystemPrompt();
+
+  try {
+    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system_instruction: { parts: [{ text: systemPrompt }] },
+        contents: geminiMessages,
+        generationConfig: { maxOutputTokens: 800 }
+      })
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.error?.message || `Erreur HTTP ${resp.status}`);
+    }
+
+    const data = await resp.json();
+    const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Je n'ai pas pu obtenir une réponse. Veuillez réessayer.";
+    chatHistory.push({ role: 'assistant', content: reply });
+    removeMsg(typingId);
+    appendMsgRich(reply, 'bot');
+    // Nouvelles suggestions après réponse
+    setTimeout(renderSuggestions, 600);
+
+  } catch (e) {
+    removeMsg(typingId);
+    appendMsg(`⚠ Erreur : ${e.message || 'Connexion impossible. Vérifiez votre connexion.'}`, 'bot');
+  }
+}
+
+function appendMsg(text, cls) {
+  const id = 'msg-' + Date.now() + Math.random().toString(36).slice(2);
+  const msgs = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + cls;
+  div.id = id;
+  div.textContent = text;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return id;
+}
+
+function appendMsgRich(text, cls) {
+  const id = 'msg-' + Date.now() + Math.random().toString(36).slice(2);
+  const msgs = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + cls;
+  div.id = id;
+  div.appendChild(renderMarkdown(text));
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return id;
+}
+
+function appendTyping() {
+  const id = 'typing-' + Date.now();
+  const msgs = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'chat-msg bot';
+  div.id = id;
+  div.innerHTML = '<div class="chat-typing"><span></span><span></span><span></span></div>';
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return id;
+}
+
+function removeMsg(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+document.getElementById('chat-send').onclick = sendChat;
+document.getElementById('chat-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') sendChat();
+});
+
+// ════════════════════════════════════════════════════════
+// SMOOTH SCROLL
+// ════════════════════════════════════════════════════════
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    const t = document.querySelector(a.getAttribute('href'));
+    if(t) { e.preventDefault(); t.scrollIntoView({behavior:'smooth', block:'start'}); }
+  });
+});
+</script>
+</body>
+</html>
